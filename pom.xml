@@ -1,0 +1,268 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>GnutellaP2PFileSharing</groupId>
+	<artifactId>GnutellaP2PFileSharing</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>GnutellaP2PFileSharing</name>
+	<description>GnutellaP2PFileSharing</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<log4j.version>2.13.0</log4j.version>
+	</properties>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+		<!-- <resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>**/Clients/*</exclude>
+				</excludes>
+			</resource>
+		</resources> -->
+		<plugins>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.2</version>
+				<executions>
+					<execution>
+						<id>copy-resources01</id>
+						<!-- here the phase you need -->
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/${project.name}</outputDirectory>   <!-- output directory -->
+							<resources>
+								<resource>
+									<directory>${basedir}/src/test/resources</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<directory>${basedir}/src/main/resources/topologies</directory>         <!-- source directory -->
+									<targetPath>topologies</targetPath>
+									<filtering>false</filtering>
+								</resource>
+								<!-- <resource>
+									<directory>${basedir}/target</directory>         source directory
+									<filtering>false</filtering>
+									<includes>
+										<include>${project.artifactId}.jar</include>
+									</includes>
+								</resource> -->
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-resources02</id>
+						<!-- here the phase you need -->
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/${project.name}/lib</outputDirectory>   <!-- output directory -->
+							<resources>
+								<!-- <resource>
+									<directory>${basedir}/src/test/resources</directory>         source directory
+									<filtering>false</filtering>
+								</resource> -->
+								<resource>
+									<directory>${basedir}/target</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+									<includes>
+										<include>${project.artifactId}.jar</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-resources03</id>
+						<!-- here the phase you need -->
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}</outputDirectory>   <!-- output directory -->
+							<resources>
+								<resource>
+									<targetPath>${project.name}/lib/classes/server</targetPath>
+									<directory>${basedir}/target/classes/server</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/lib/classes/client</targetPath>
+									<directory>${basedir}/target/classes/client</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/lib/classes/util</targetPath>
+									<directory>${basedir}/target/classes/util</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/lib/classes/model</targetPath>
+									<directory>${basedir}/target/classes/model</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/lib/classes/</targetPath>
+									<directory>${basedir}/target/classes</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+									<includes>
+										<include>security.policy</include>
+									</includes>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/lib/classes/</targetPath>
+									<directory>${basedir}/target/classes</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+									<includes>
+										<include>log4j2.properties</include>
+									</includes>
+								</resource>
+								<resource>
+									<targetPath>${project.name}</targetPath>
+									<directory>${basedir}/target/classes</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+									<includes>
+										<include>Start.bat</include>
+									</includes>
+								</resource>
+								<!-- <resource>
+									<targetPath>${project.name}</targetPath>
+									<directory>${basedir}/target/classes</directory>         source directory
+									<filtering>false</filtering>
+									<includes>
+										<include>RMIRegistry.bat</include>
+									</includes>
+								</resource> -->
+								<!-- <resource>
+									<targetPath>${project.name}/Clients/Client2/server</targetPath>
+									<directory>${basedir}/target/classes/server</directory>         source directory
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/Clients/Client2/client</targetPath>
+									<directory>${basedir}/target/classes/client</directory>         source directory
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/Clients/Client2/util</targetPath>
+									<directory>${basedir}/target/classes/util</directory>         source directory
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/Clients/Client2/model</targetPath>
+									<directory>${basedir}/target/classes/model</directory>         source directory
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/Clients/Client3/server</targetPath>
+									<directory>${basedir}/target/classes/server</directory>         source directory
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/Clients/Client3/client</targetPath>
+									<directory>${basedir}/target/classes/client</directory>         source directory
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/Clients/Client3/util</targetPath>
+									<directory>${basedir}/target/classes/util</directory>         source directory
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/Clients/Client3/model</targetPath>
+									<directory>${basedir}/target/classes/model</directory>         source directory
+									<filtering>false</filtering>
+								</resource> -->
+								<resource>
+									<targetPath>${project.name}/lib</targetPath>
+									<directory>${project.build.directory}/lib</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<executions>
+					<execution>
+						<id>default-jar</id>
+						<!-- put the default-jar in the none phase to skip it from being created -->
+						<phase>none</phase>
+					</execution>
+				</executions>
+<!-- 				<configuration>
+                <archive>
+                    Make an executable jar, adjust classpath entries
+                    <manifest>
+                        <addClasspath>true</addClasspath>
+                        <classpathPrefix>./lib/</classpathPrefix>
+                        <mainClass>client.ClientDriver</mainClass>
+                    </manifest>
+                </archive>
+                exclude the properties file from the archive
+                <excludes>
+                    <exclude>**/Clients/*</exclude>
+                </excludes>
+            </configuration> -->
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>2.3.1</version>
+				<executions>
+					<execution>
+						<id>default-install</id>
+						<!-- put the default-jar in the none phase to skip it from being created -->
+						<phase>none</phase>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+	</dependencies>
+</project>
