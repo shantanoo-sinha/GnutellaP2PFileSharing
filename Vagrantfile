@@ -69,7 +69,7 @@ Vagrant.configure("2") do |config|
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
-    dnf -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python2 python3 ruby wget
+    dnf -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python2 python3 ruby wget dos2unix
     dnf -y groupinstall "Development Tools"
 	
 	# Install Maven
