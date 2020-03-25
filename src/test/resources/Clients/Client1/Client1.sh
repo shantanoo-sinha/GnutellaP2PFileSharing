@@ -1,4 +1,5 @@
 cd ./lib/classes
+pwd
 rmiregistry &
 export CLASSPATH="$CLASSPATH:./../../lib/classes:./../../lib/*"
 echo $CLASSPATH
