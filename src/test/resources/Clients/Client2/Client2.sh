@@ -1,4 +1,4 @@
-cd ./lib/classes
+cd ./../../lib/classes
 export CLASSPATH="$CLASSPATH:./../../lib/classes:./../../lib/*"
 echo $CLASSPATH
 sleep 5
