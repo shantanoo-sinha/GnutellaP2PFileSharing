@@ -130,7 +130,7 @@
 									<directory>${basedir}/target/classes</directory>         <!-- source directory -->
 									<filtering>false</filtering>
 									<includes>
-										<include>Start.bat</include>
+										<include>*.bat</include>
 									</includes>
 								</resource>
 								<resource>
@@ -138,7 +138,7 @@
 									<directory>${basedir}/target/classes</directory>         <!-- source directory -->
 									<filtering>false</filtering>
 									<includes>
-										<include>Start.sh</include>
+										<include>*.sh</include>
 									</includes>
 								</resource>
 								<resource>

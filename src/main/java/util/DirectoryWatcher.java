@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 
 import server.Server;
 
-// TODO: Auto-generated Javadoc
 /**
  * DirectoryWatcher monitors the directory of the server and triggers a
  * notification if there is any change in the directory contents

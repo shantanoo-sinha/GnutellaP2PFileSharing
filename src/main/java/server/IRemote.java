@@ -15,7 +15,7 @@ import model.MessageID;
  * @author Shantanoo
  */
 public interface IRemote extends Remote {
-
+	
 	/**
 	 * Query.
 	 *
@@ -26,7 +26,10 @@ public interface IRemote extends Remote {
 	 * @throws RemoteException the remote exception
 	 */
 	public void query(MessageID messageID, long TTL, String fileName, String upstreamIPAddress) throws RemoteException;
+	
+	/*public boolean queryLeafNode(MessageID messageID, long TTL, String fileName, String upstreamIPAddress) throws RemoteException;*/
 
+	/*public List<String> queryLeafNodes(MessageID messageID, long TTL, String fileName, String requestingLeafNode) throws RemoteException;*/
 	/**
 	 * Queryhit.
 	 *

@@ -55,4 +55,10 @@ public class Constants {
 	
 	/** The Constant CLIENT_PREFIX. */
 	public static final String CLIENT_PREFIX = "Client";
+	
+	/** The Constant SUPER_PEER. */
+	public static final String SUPER_PEER = "SuperPeer";
+	
+	/** The Constant LEAF_NODE. */
+	public static final String LEAF_NODE = "LeafNode";
 }

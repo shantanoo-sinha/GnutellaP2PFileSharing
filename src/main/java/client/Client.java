@@ -123,15 +123,15 @@ public class Client {
 	 * @param fileName the file name
 	 */
 	public void retrieveFile(String fileName){
-		String leafNodeId = Constants.RMI_LOCALHOST + server.getProperty(id).trim() + Constants.PEER_SERVER;
-		MessageID messageId = new MessageID(leafNodeId, sequenceNumber++);
+		String leafNodeId = Constants.RMI_LOCALHOST + server.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
+		MessageID messageID = new MessageID(leafNodeId, sequenceNumber++);
 		try {
-        	logger.info("Querying file " + fileName + " from " + id);
-//        	server.query(messageId, fileName);
-        	server.query(messageId, server.getTTL(), fileName, server.getIpAddress());
+        	//logger.info("[" + this.id + "] Querying file " + fileName + " from " + id);
+        	server.query(messageID, fileName);
+//        	server.query(messageID, server.getTTL(), fileName, server.getIpAddress());
         } catch (Exception e) {
-        	logger.error("[" + this.id + "] " + "Client exception: Unable to retrieve file.");
-            logger.error("[" + this.id + "] " + "Unable to query file " + fileName + " from " + leafNodeId + ":\n" + e.toString());
+        	logger.error("[" + this.id + "] Client exception: Unable to retrieve file.");
+            logger.error("[" + this.id + "] Unable to query file " + fileName + " from " + leafNodeId + ":\n" + e.toString());
             e.printStackTrace();
         }
     }
@@ -144,8 +144,10 @@ public class Client {
 	public static void main(String[] args) {
 		String topology = args[0];
 		String id = args[1];
+		logger.info("*******************************************************************");
 		logger.info("[" + id + "] " + "Initialized Topology:" + topology);
-
+		logger.info("*******************************************************************");
+		
 		Properties prop = new Properties();
 		File USER_DIR = new File(System.getProperty(Constants.USER_DIR));
 		File TOPOLOGY_FILE_PATH = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator + Constants.TOPOLOGY_FOLDER);
@@ -162,38 +164,44 @@ public class Client {
 		}
 		
 		Client client = new Client(id, topology);
-		logger.info("[" + id + "] " + id + " (Port: " + prop.getProperty(id) + ") initialized");
+		logger.info("[" + id + "] " + id + " initialized on port: " + prop.getProperty(id + ".port"));
+		logger.info("*******************************************************************");
 
-		Scanner scanner = new Scanner(System.in);
-		String input;
-		logger.info("\nEnter 'exit' to exit the application"
-				+ "\nEnter the name of file (with extension) you want to download:\n");
-		
-		while (true) {
-			/*logger.info("\nEnter 'exit' to exit the application"
-					+ "\nEnter the name of file (with extension) you want to download:\n");*/
-			input = scanner.nextLine();
-			if (input.equalsIgnoreCase("exit") || input.equalsIgnoreCase("e")) {
-				logger.info("\nClient exiting...\n");
-				scanner.close();
-				System.exit(0);
-			} else if (input != null && (input.trim().contains(Constants.SPACE) || !input.trim().contains(Constants.DOT))) {
-				logger.info("Incorrect command");
-				logger.info("USAGE: <file name with extension>");
-				logger.info("EXAMPLE: <123.txt>");
-				logger.info("EXAMPLE: <e or exit>");
-			} else {
-				long startTime = System.currentTimeMillis();
-				logger.info("[" + id + "] " + "Requesting file: " + input);
-				client.retrieveFile(input);
-				long endTime = System.currentTimeMillis();
-				long elapsedTime = endTime - startTime;
-//				logger.info("Process completed in " + elapsedTime);
-				double elapsedTimeInMSecond = (double) elapsedTime / 1000.000;
-				logger.info("Process completed in " + TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.MILLISECONDS) + "(" + elapsedTimeInMSecond + " second)");
+		if(client.server.isSuperPeer()) {
+			while (true) {
+				
 			}
+		} else {
+			Scanner scanner = new Scanner(System.in);
+			String input;
 			logger.info("\nEnter 'exit' to exit the application"
 					+ "\nEnter the name of file (with extension) you want to download:\n");
+			
+			while (true) {
+				/*logger.info("\nEnter 'exit' to exit the application"
+						+ "\nEnter the name of file (with extension) you want to download:\n");*/
+				input = scanner.nextLine();
+				if (input.equalsIgnoreCase("exit") || input.equalsIgnoreCase("e")) {
+					logger.info("\nClient exiting...\n");
+					scanner.close();
+					System.exit(0);
+				} else if (input != null && (input.trim().contains(Constants.SPACE) || !input.trim().contains(Constants.DOT))) {
+					logger.info("Incorrect command");
+					logger.info("USAGE: <file name with extension>");
+					logger.info("EXAMPLE: <123.txt>");
+					logger.info("EXAMPLE: <e or exit>");
+				} else {
+					long startTime = System.currentTimeMillis();
+					//logger.info("[" + id + "] " + "Requesting file: " + input);
+					client.retrieveFile(input);
+					long endTime = System.currentTimeMillis();
+					long elapsedTime = endTime - startTime;
+					double elapsedTimeInMSecond = (double) elapsedTime / 1000.000;
+					logger.info("Process completed in " + TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.MILLISECONDS) + "(" + elapsedTimeInMSecond + ") second");
+				}
+				logger.info("\nEnter 'exit' to exit the application"
+						+ "\nEnter the name of file (with extension) you want to download:\n");
+			}
 		}
 	}
 }
