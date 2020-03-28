@@ -37,6 +37,8 @@ public class MessageID implements Serializable {
 	/**
 	 * Gets the leaf node id address.
 	 *
+	 * @param leafNodeId the leaf node id
+	 * @param sequenceNumber the sequence number
 	 * @return the leafNodeIdAddress
 	 */
 	/*public String getLeafNodeIdAddress() {

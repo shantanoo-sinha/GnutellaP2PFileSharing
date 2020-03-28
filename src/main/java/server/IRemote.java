@@ -45,11 +45,12 @@ public interface IRemote extends Remote {
 	 * Obtain.
 	 *
 	 * @param fileName the file name
+	 * @param leafNodeIP the leaf node IP
 	 * @return the byte[]
 	 * @throws RemoteException the remote exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public byte[] obtain(String fileName) throws RemoteException, IOException;
+	public byte[] obtain(String fileName, String leafNodeIP) throws RemoteException, IOException;
 	
 	/**
 	 * Check upstream map.

@@ -546,7 +546,7 @@ public class Server implements IRemote, Serializable {
 					logger.info("[" + this.id + "] " + "Requested file download from leaf node " + leafNodeIP);
 					Registry registry = LocateRegistry.getRegistry();
 					IRemote serverStub = (IRemote) registry.lookup(leafNodeIP);
-					byte[] fileContent = serverStub.obtain(fileName);
+					byte[] fileContent = serverStub.obtain(fileName, this.nodeAddress);
 					if(writeFileContent(fileContent, fileName)) {
 						logger.info("[" + this.id + "] " + "Requested file " + fileName + " downloaded successfully.");
 						/*messageID.setFileNotFoundOnAnyNode(false);
@@ -571,12 +571,12 @@ public class Server implements IRemote, Serializable {
 	/* (non-Javadoc)
 	 * @see server.IRemote#obtain(java.lang.String)
 	 */
-	public byte[] obtain(String fileName) throws IOException {
+	public byte[] obtain(String fileName, String leafNodeIP) throws IOException {
 		byte[] fileContent = null;
 		try {
-			logger.info("[" + this.id + "] " + "Reading file content from " + this.filesDirectory + File.separator + fileName + " ...");
+			logger.info("[" + this.id + "] " + "Starting sending file content from " + this.filesDirectory + File.separator + fileName + " to requesting node " + leafNodeIP);
 			fileContent = Files.readAllBytes(Paths.get(this.filesDirectory + File.separator + fileName));
-			logger.info("[" + this.id + "] " + "Sent the file content from " + this.filesDirectory + File.separator + fileName + " ...");
+			logger.info("[" + this.id + "] " + "Finished sending file content from " + this.filesDirectory + File.separator + fileName + " to requesting node " + leafNodeIP);
 		} catch (Exception e) {
 			logger.error("[" + this.id + "] " + "Server exception: Failed to read the requested file content" + e.getMessage());
 			e.printStackTrace();

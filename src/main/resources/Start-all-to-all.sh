@@ -1,64 +1,64 @@
 @echo on
+echo Starting RMIRegistry...
+sh ./RMIRegistry.sh
+echo RMIRegistry started...
+sleep 5
+
+
 echo Starting Clients...
 
 echo Starting Client 1...
 cd ./Clients/Client1
-sh ./Client1.sh
+sh ./Client1-all-to-all.sh
 echo Client1 started...
 sleep 5
 
 echo Starting Client 2...
 cd ./../Client2
-sh ./Client2.sh
+sh ./Client2-all-to-all.sh
 echo Client2 started...
 sleep 5
 
 echo Starting Client 3...
 cd ./../Client3
-sh ./Client3.sh
+sh ./Client3-all-to-all.sh
 echo Client3 started...
 sleep 5
 
 echo Starting Client 4...
 cd ./../Client4
-sh ./Client4.sh
+sh ./Client4-all-to-all.sh
 echo Client4 started...
 sleep 5
 
 echo Starting Client 5...
 cd ./../Client5
-sh ./Client5.sh
+sh ./Client5-all-to-all.sh
 echo Client5 started...
 sleep 5
 
 echo Starting Client 6...
 cd ./../Client6
-sh ./Client6.sh
+sh ./Client6-all-to-all.sh
 echo Client6 started...
 sleep 5
 
 echo Starting Client 7...
 cd ./../Client7
-sh ./Client7.sh
+sh ./Client7-all-to-all.sh
 echo Client7 started...
 sleep 5
 
 echo Starting Client 8...
 cd ./../Client8
-sh ./Client8.sh
+sh ./Client8-all-to-all.sh
 echo Client8 started...
 sleep 5
 
 echo Starting Client 9...
 cd ./../Client9
-sh ./Client9.sh
+sh ./Client9-all-to-all.sh
 echo Client9 started...
-sleep 5
-
-echo Starting Client 10...
-cd ./../Client10
-sh ./Client10.sh
-echo Client10 started...
 sleep 5
 
 echo Exiting...

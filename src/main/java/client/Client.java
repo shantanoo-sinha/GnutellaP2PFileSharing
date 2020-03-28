@@ -3,6 +3,7 @@ package client;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -192,8 +193,16 @@ public class Client {
 					logger.info("EXAMPLE: <e or exit>");
 				} else {
 					long startTime = System.currentTimeMillis();
-					//logger.info("[" + id + "] " + "Requesting file: " + input);
-					client.retrieveFile(input);
+					if(input.contains(";")) {
+						logger.info("[" + id + "] " + "Received multi-file requests");
+						logger.info("[" + id + "] " + "Sending file request one-by-one");
+						Arrays.asList(input.split(";")).stream().filter(x -> !x.isEmpty()).forEach(fileName -> {
+							logger.info("[" + id + "] " + "Requesting file: " + fileName);
+							client.retrieveFile(fileName);
+						});
+					} else {
+						client.retrieveFile(input);
+					}
 					long endTime = System.currentTimeMillis();
 					long elapsedTime = endTime - startTime;
 					double elapsedTimeInMSecond = (double) elapsedTime / 1000.000;
