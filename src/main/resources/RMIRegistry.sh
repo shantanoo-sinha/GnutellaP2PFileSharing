@@ -1,2 +1,1 @@
-cd lib/classes
-rmiregistry &
+cd ./lib/classes;rmiregistry &
