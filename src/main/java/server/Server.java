@@ -104,14 +104,21 @@ public class Server implements IRemote, Serializable {
 		this.id = id;
 		this.peerNetworkTopology = peerNetworkTopology;
 		
+		//initalize the server
 		init();
 		
 		if (!isSuperPeer)
 			this.filesDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
 					+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.FILES_FOLDER);
 		
+		//register the available files for a leaf node
 		registerFiles();
+		
+		//register the neigbours of a super peer node
 		getNeighbors();
+		
+		//configuring to make the associative array maintain a defined size
+		//This will remove the oldest entry from the hash map
 		upstreamMap = new LinkedHashMap<MessageID, String>(upstreamMapMaxSize, 0.75F, false) {
 			/**
 			 * Overriding LinkedHashMap removeEldestEntry implementation to remove the
@@ -272,6 +279,7 @@ public class Server implements IRemote, Serializable {
 			System.setProperty(Constants.JAVA_RMI_SERVER_HOSTNAME, Constants.LOCALHOST);
 			logger.info("[" + this.id + "] " + Constants.JAVA_RMI_SERVER_HOSTNAME + ":" + System.getProperty(Constants.JAVA_RMI_SERVER_HOSTNAME));
 			
+			// Initialize the RMI Registry
 			IRemote stub = (IRemote) UnicastRemoteObject.exportObject(this, 0);
 			Registry registry = LocateRegistry.getRegistry();
 			registry.rebind(Constants.RMI_LOCALHOST + prop.getProperty(id + ".port").trim() + Constants.PEER_SERVER, stub);
@@ -298,6 +306,7 @@ public class Server implements IRemote, Serializable {
 
 		InputStream is = null;
 		try {
+			//loading the configuration from the topology file
 			is = new FileInputStream(new File(TOPOLOGY_FILE_PATH + File.separator + peerNetworkTopology + Constants.TXT));
 			prop.load(is);
 			this.nodeAddress = Constants.RMI_LOCALHOST + prop.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
@@ -325,6 +334,7 @@ public class Server implements IRemote, Serializable {
 	 */
 	private void initLeafNodes() {
 		try {
+			// loading super peer information
 			if (Arrays.asList(prop.getProperty(Constants.SUPER_PEER).split(Constants.SPLIT_REGEX)).contains(id)) {
 				isSuperPeer = true;
 				logger.info("*******************************************************************");
@@ -339,6 +349,7 @@ public class Server implements IRemote, Serializable {
 				});
 				logger.info("*******************************************************************");
 			} else {
+				// loading leaf node information
 				logger.info("*******************************************************************");
 				logger.info("[" + this.id + "] This is a leaf node.");
 				Arrays.asList(prop.getProperty(Constants.SUPER_PEER).split(Constants.SPLIT_REGEX)).forEach(x -> {
@@ -361,6 +372,7 @@ public class Server implements IRemote, Serializable {
 		if (isSuperPeer)
 			return;
 		
+		//loading files information
 		File[] filesArr = filesDirectory.listFiles();
 		logger.info("*******************************************************************");
 		logger.info("[" + this.id + "] " + this.id + " Files Directory:" + filesDirectory);
@@ -409,10 +421,12 @@ public class Server implements IRemote, Serializable {
 
 		try {
 			long fileCount = files.size();
+			// query current leaf node
 			if (files.containsKey(new File(filesDirectory + File.separator + fileName))) {
 				logger.info("[" + this.id + "] " + "Requested file " + fileName + " is already present on the requesting client");
 				return;
 			} else {
+				//querying super peer
 				logger.info("[" + this.id + "] " + "Requested file " + fileName + " is not present on the requesting client. Looking on others.");
 				if (!upstreamMap.containsKey(messageID) && TTL >= 0)
 					upstreamMap.put(messageID, nodeAddress);
@@ -439,12 +453,13 @@ public class Server implements IRemote, Serializable {
 			if (TTL >= 0) {
 				
 				if(isSuperPeer) {
-
+					//querying super peer
 					if (!upstreamMap.containsKey(messageID) && TTL >= 0) {
 						upstreamMap.put(messageID, upstreamIP);
 						logger.info("[" + this.id + "] " + "Upstream Address: " + upstreamIP);
 					}
 
+					// querying leaf nodes
 					logger.info("[" + this.id + "] " + "Looking file: " + fileName + " on connected " + nodeAddress + " leaf nodes");	
 					for(String leafNodeAddress: leafNodes) {
 						if(leafNodeAddress.equalsIgnoreCase(upstreamIP))
@@ -468,6 +483,7 @@ public class Server implements IRemote, Serializable {
 						}
 					}
 					
+					// querying other super peers
 					logger.info("[" + this.id + "] Requesting file on other Super Peers");
 					List<String> neighbourSuperPeers = Arrays.asList(prop.getProperty(Constants.SUPER_PEER).split(Constants.SPLIT_REGEX));
 					for(String neighbourSuperPeer: neighbourSuperPeers) {
@@ -500,12 +516,14 @@ public class Server implements IRemote, Serializable {
 					logger.info("[" + this.id + "] Requested file: " + fileName + " found on node:" + this.id);
 					/*messageID.setFileNotFoundOnAnyNode(false);
 					messageID.setLeafNodeIdAddress(nodeAddress);*/
+					// sending queryHit message to leaf node
 					queryHit(messageID, TTL - 1, fileName, nodeAddress);
 				} else {
 					if (!upstreamMap.containsKey(messageID) && TTL >= 0) {
 						upstreamMap.put(messageID, upstreamIP);
 						logger.info("[" + this.id + "] " + "Upstream Address: " + upstreamIP);
 					}
+					// querying super peer
 					Registry registry;
 					try {
 						registry = LocateRegistry.getRegistry();
@@ -537,6 +555,7 @@ public class Server implements IRemote, Serializable {
 	public void queryHit(MessageID messageID, long TTL, String fileName, String leafNodeIP) throws RemoteException {
 		try {
 			if (this.nodeAddress.equals(messageID.getLeafNodeId())) {
+				//this is the requestor leaf node. It will download the file
 				logger.info("[" + this.id + "] " + this.id + ": receiving query hit for file:" + fileName + " from " + leafNodeIP);
 				logger.info("[" + this.id + "] " + "Checking just before file download");
 
@@ -556,6 +575,7 @@ public class Server implements IRemote, Serializable {
 					}
 				}
 			} else {
+				// back propagating queryHit message to the requestor leaf node
 				String upstreamIPAddress = upstreamMap.get(messageID);
 				logger.info("[" + this.id + "] " + "Sending back-propogation message for requested file " + fileName + " to " + upstreamIPAddress);
 				Registry registry = LocateRegistry.getRegistry();
@@ -574,6 +594,7 @@ public class Server implements IRemote, Serializable {
 	public byte[] obtain(String fileName, String leafNodeIP) throws IOException {
 		byte[] fileContent = null;
 		try {
+			// reading file content
 			logger.info("[" + this.id + "] " + "Starting sending file content from " + this.filesDirectory + File.separator + fileName + " to requesting node " + leafNodeIP);
 			fileContent = Files.readAllBytes(Paths.get(this.filesDirectory + File.separator + fileName));
 			logger.info("[" + this.id + "] " + "Finished sending file content from " + this.filesDirectory + File.separator + fileName + " to requesting node " + leafNodeIP);
@@ -615,6 +636,7 @@ public class Server implements IRemote, Serializable {
 	 * @return true, if successful
 	 */
 	public boolean writeFileContent(byte[] fileContent, String fileName) {
+		// writing file to leaf node
 		FileOutputStream fileOutputStream = null;
 		boolean isFileDownloaded = false;
 		boolean isFileAddedToRegistry = false;
@@ -653,6 +675,7 @@ public class Server implements IRemote, Serializable {
 			return;
 		}
 		try {
+			// loading the neighbours
 			String clientNeighbour = prop.getProperty(id + ".next");
 			if (clientNeighbour != null) {
 				neighbours = (Arrays.asList(clientNeighbour.split(Constants.SPLIT_REGEX)));
