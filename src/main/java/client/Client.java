@@ -3,25 +3,38 @@ package client;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import model.FileConsistencyState;
 import model.MessageID;
+import model.P2PFile;
 import server.Server;
 import util.Constants;
+import util.DirectoryWatcher;
 
 /**
  * The Class Client.
  *
  * @author Shantanoo
  */
-public class Client {
+public class Client implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 559133148017097116L;
+
+
 	/** The Constant logger. */
 	private static final Logger logger = LogManager.getLogger(Client.class);
 
@@ -34,8 +47,19 @@ public class Client {
 	/** The files dir path. */
 	private String filesDirPath = null;
 	
+	private static long TTR = -1l;
+	private static String pushOrPull = null;
+	
+	private File masterFilesDirectory;
+	private File sharedFilesDirectory;
+	
+	private File USER_DIR = new File(System.getProperty(Constants.USER_DIR));
+	
 	/** The sequence number. */
 	private Long sequenceNumber = 0l;
+	
+	private Map<File, P2PFile> masterFiles = new ConcurrentHashMap<File, P2PFile>();
+	private Map<File, P2PFile> sharedFiles = new ConcurrentHashMap<File, P2PFile>();
 
 	/**
 	 * Instantiates a new client.
@@ -46,7 +70,14 @@ public class Client {
 	public Client(String id, String peerNetworkTopology) {
 		super();
 		this.id = id;
-		initServer(id, peerNetworkTopology);
+		initServer(this, id, peerNetworkTopology, TTR);
+		if (!server.isSuperPeer()) {
+			this.masterFilesDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
+					+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.FILES_FOLDER + File.separator + Constants.MASTER_FOLDER);
+			this.sharedFilesDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
+					+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.FILES_FOLDER + File.separator + Constants.SHARED_FOLDER);
+		}
+		registerFiles();
 	}
 
 	/**
@@ -55,9 +86,9 @@ public class Client {
 	 * @param id the id
 	 * @param peerNetworkTopology the peer network topology
 	 */
-	private void initServer(String id, String peerNetworkTopology) {
+	private void initServer(Client client, String id, String peerNetworkTopology, long TTR) {
 		try {
-			server = new Server(id, peerNetworkTopology);
+			server = new Server(client, id, peerNetworkTopology, TTR);
 		} catch (Exception e) {
 			logger.error("Exception: Unable to initiate Server for client " + id + ":\n" + e.toString());
 			e.printStackTrace();
@@ -119,6 +150,193 @@ public class Client {
 	}
 	
 	/**
+	 * Gets the masterFiles.
+	 *
+	 * @return the masterFiles
+	 *//*
+	public Map<File, Object> getFiles() {
+		return masterFiles;
+	}
+
+	*//**
+	 * Sets the masterFiles.
+	 *
+	 * @param masterFiles            the masterFiles to set
+	 *//*
+	public void setFiles(Map<File, Object> files) {
+		this.masterFiles = files;
+	}*/
+	
+	/**
+	 * Gets the masterFiles directory.
+	 *
+	 * @return the masterFilesDirectory
+	 *//*
+	public File getFilesDirectory() {
+		return masterFilesDirectory;
+	}
+
+	*//**
+	 * Sets the masterFiles directory.
+	 *
+	 * @param masterFilesDirectory            the masterFilesDirectory to set
+	 *//*
+	public void setFilesDirectory(File filesDirectory) {
+		this.masterFilesDirectory = filesDirectory;
+	}*/
+	
+	
+	/**
+	 * @return the masterFilesDirectory
+	 */
+	public File getMasterFilesDirectory() {
+		return masterFilesDirectory;
+	}
+
+	/**
+	 * @param masterFilesDirectory the masterFilesDirectory to set
+	 */
+	public void setMasterFilesDirectory(File masterFilesDirectory) {
+		this.masterFilesDirectory = masterFilesDirectory;
+	}
+
+	/**
+	 * @return the sharedFilesDirectory
+	 */
+	public File getSharedFilesDirectory() {
+		return sharedFilesDirectory;
+	}
+
+	/**
+	 * @param sharedFilesDirectory the sharedFilesDirectory to set
+	 */
+	public void setSharedFilesDirectory(File sharedFilesDirectory) {
+		this.sharedFilesDirectory = sharedFilesDirectory;
+	}
+
+	/**
+	 * @return the uSER_DIR
+	 */
+	public File getUSER_DIR() {
+		return USER_DIR;
+	}
+
+	/**
+	 * @param uSER_DIR the uSER_DIR to set
+	 */
+	public void setUSER_DIR(File uSER_DIR) {
+		USER_DIR = uSER_DIR;
+	}
+
+	/**
+	 * @return the sequenceNumber
+	 */
+	public Long getSequenceNumber() {
+		return sequenceNumber;
+	}
+
+	/**
+	 * @param sequenceNumber the sequenceNumber to set
+	 *//*
+	public void setSequenceNumber(Long sequenceNumber) {
+		this.sequenceNumber = sequenceNumber;
+	}*/
+
+	/**
+	 * @return the masterFiles
+	 */
+	public Map<File, P2PFile> getMasterFiles() {
+		return masterFiles;
+	}
+
+	public void addToMasterFiles(File file, P2PFile fileDetails) {
+		this.masterFiles.put(file, fileDetails);
+	}
+
+	/**
+	 * @return the sharedFiles
+	 */
+	public Map<File, P2PFile> getSharedFiles() {
+		return sharedFiles;
+	}
+
+	public void addToSharedFiles(File file, P2PFile fileDetails) {
+		this.sharedFiles.put(file, fileDetails);
+	}
+
+	/**
+	 * Register masterFiles.
+	 */
+	public void registerFiles() {
+		if (server.isSuperPeer())
+			return;
+		
+		//loading masterFiles information
+		File[] filesArr = getMasterFilesDirectory().listFiles();
+		logger.info("*******************************************************************");
+		logger.info("[" + this.id + "] " + this.id + " Files Directory:" + getMasterFilesDirectory());
+		logger.info("[" + this.id + "] " + this.id + " Available Files:");
+		for (int i = 0; i < filesArr.length; i++) {
+			if(filesArr[i].isDirectory())
+				continue;
+			logger.info("[" + this.id + "] " + filesArr[i].getName());
+			/*masterFiles.put(filesArr[i], filesArr[i]);*/
+			addToMasterFiles(filesArr[i], new P2PFile(1, 100, this.server.getIpAddress(), null, filesArr[i], filesArr[i].getName(), FileConsistencyState.VALID));
+		}
+		new Thread(new DirectoryWatcher(this)).start();
+		logger.info("[" + this.id + "] " + this.id + " Master Files Count:" + masterFiles.size());
+		logger.info("[" + this.id + "] " + this.id + " Shared Files Count:" + sharedFiles.size());
+		logger.info("*******************************************************************");
+	}
+	
+	/*public void addMasterFile(String fileName) throws RemoteException {
+		logger.info("[" + this.id + "] " + "Updating Server file...");
+		addMasterFileToRegistry(fileName);
+		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
+	}
+	
+	public synchronized boolean addMasterFileToRegistry(String fileName) {
+		addToMasterFiles(new File(masterFilesDirectory + File.separator + fileName));
+		return true;
+	}*/
+
+	public void deleteMasterFile(String fileName) throws RemoteException {
+		logger.info("[" + this.id + "] " + "Deleting Server file...");
+		removeMasterFileFromRegistry(fileName);
+		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
+	}
+	
+	private synchronized boolean removeMasterFileFromRegistry(String fileName) {
+		masterFiles.remove(new File(masterFilesDirectory + File.separator + fileName), new File(masterFilesDirectory + File.separator + fileName));
+		return true;
+	}
+	
+	/*public void addSharedFile(String fileName) throws RemoteException {
+		logger.info("[" + this.id + "] " + "Updating Server file...");
+		addSharedFileToRegistry(fileName);
+		logger.info("[" + this.id + "] " + "Updated Server sharedFiles count:" + masterFiles.size());
+	}*/
+	
+	public void deleteSharedFile(String fileName) throws RemoteException {
+		logger.info("[" + this.id + "] " + "Deleting Server file...");
+		removeSharedFileFromRegistry(fileName);
+		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
+	}
+	
+	public synchronized boolean addSharedFileToRegistry(String fileName, P2PFile p2PFile) {
+		addToSharedFiles(getFileObj(sharedFilesDirectory, fileName), p2PFile);
+		return true;
+	}
+	
+	private File getFileObj(File dir, String fileName) {
+		return new File(dir + File.separator + fileName);
+	}
+	
+	private synchronized boolean removeSharedFileFromRegistry(String fileName) {
+		sharedFiles.remove(new File(sharedFilesDirectory + File.separator + fileName), new File(sharedFilesDirectory + File.separator + fileName));
+		return true;
+	}
+	/**
 	 * Retrieve file.
 	 *
 	 * @param fileName the file name
@@ -145,8 +363,15 @@ public class Client {
 	public static void main(String[] args) {
 		String topology = args[0];
 		String id = args[1];
+		
+		pushOrPull = args[2];
+		
 		logger.info("*******************************************************************");
 		logger.info("[" + id + "] " + "Initialized Topology:" + topology);
+		if("Pull".equalsIgnoreCase(pushOrPull)) {
+			TTR = args[3] == null ? -1 : Long.parseLong(args[3]);
+		}
+		logger.info("[" + id + "] " + "Push or Pull:" + pushOrPull + ", TTR:" + TTR);
 		logger.info("*******************************************************************");
 		
 		Properties prop = new Properties();
@@ -213,4 +438,34 @@ public class Client {
 			}
 		}
 	}
+
+	public void modifyMasterFile(String fileName) {
+		P2PFile p2pFile = this.masterFiles.get(getFileObj(masterFilesDirectory, fileName));
+		p2pFile.incrementVersion();
+		String leafNodeId = Constants.RMI_LOCALHOST + server.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
+		MessageID messageID = new MessageID(leafNodeId, sequenceNumber++);
+		try {
+			if("Push".equalsIgnoreCase(pushOrPull))
+				server.invalidate(messageID, p2pFile, this.server.getIpAddress());
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/*public void simulateUpdate(){
+        
+                ConsistentFile cf = fileMap.get(fileName);
+                cf.setVersion(cf.getVersion() +  1);
+                if(mode.equals("push")) {
+                    invalidateNeighbors(new Pair(fileName, cf.getVersion()));
+                    Collections.shuffle(originIndex);
+                    fileName = originIndex.get(0);
+                    System.out.println(fileName + " has been updated");
+                    int delay = (int)nextExponentialDelay(5.0 * 1000.0);
+                    System.out.println("Next pseudoupdate will be in " + delay + " milliseconds");
+                    updateTimer = new Timer(delay, this);
+                    updateTimer.setRepeats(false);
+                    updateTimer.start();
+        
+    }*/
 }

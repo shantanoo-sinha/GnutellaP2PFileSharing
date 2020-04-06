@@ -45,6 +45,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
+							<includeEmptyDirs>true</includeEmptyDirs>
 							<outputDirectory>${basedir}/target/${project.name}</outputDirectory>   <!-- output directory -->
 							<resources>
 								<resource>

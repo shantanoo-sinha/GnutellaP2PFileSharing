@@ -9,55 +9,55 @@ echo Starting Clients...
 
 echo Starting Client 1...
 cd Clients\Client1
-START /MAX Client1-all-to-all.bat
+START /MAX Client1-all-to-all.bat Push 100
 echo Client1 started...
 timeout /t 2
 
 echo Starting Client 4...
 cd ..\Client4
-START /MAX Client4-all-to-all.bat
+START /MAX Client4-all-to-all.bat Push 100
 echo Client4 started...
 timeout /t 2
 
 echo Starting Client 7...
 cd ..\Client7
-START /MAX Client7-all-to-all.bat
+START /MAX Client7-all-to-all.bat Push 100
 echo Client7 started...
 timeout /t 60
 
 echo Starting Client 2...
 cd ..\Client2
-START /MAX Client2-all-to-all.bat
+START /MAX Client2-all-to-all.bat Push 100
 echo Client2 started...
 timeout /t 2
 
 echo Starting Client 3...
 cd ..\Client3
-START /MAX Client3-all-to-all.bat
+START /MAX Client3-all-to-all.bat Push 100
 echo Client3 started...
 timeout /t 2
 
 echo Starting Client 5...
 cd ..\Client5
-START /MAX Client5-all-to-all.bat
+START /MAX Client5-all-to-all.bat Push 100
 echo Client5 started...
 timeout /t 2
 
 echo Starting Client 6...
 cd ..\Client6
-START /MAX Client6-all-to-all.bat
+START /MAX Client6-all-to-all.bat Push 100
 echo Client6 started...
 timeout /t 2
 
 echo Starting Client 8...
 cd ..\Client8
-START /MAX Client8-all-to-all.bat
+START /MAX Client8-all-to-all.bat Push 100
 echo Client8 started...
 timeout /t 2
 
 echo Starting Client 9...
 cd ..\Client9
-START /MAX Client9-all-to-all.bat
+START /MAX Client9-all-to-all.bat Push 100
 echo Client9 started...
 timeout /t 2
 

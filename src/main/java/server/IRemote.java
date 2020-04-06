@@ -6,8 +6,10 @@ package server;
 import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 import model.MessageID;
+import model.P2PFile;
 
 /**
  * The Interface IRemote.
@@ -15,7 +17,13 @@ import model.MessageID;
  * @author Shantanoo
  */
 public interface IRemote extends Remote {
-	
+
+/*//	public Client client = null;
+	public Client getClient() throws RemoteException;
+	public Map<String, Client> getLeafNodesMap() throws RemoteException;
+	public void addToLeafNodesMap(String key, Client value) throws RemoteException;*/
+	public List<P2PFile> getFiles() throws RemoteException;
+	public List<P2PFile> queryLeafNodes() throws RemoteException;
 	/**
 	 * Query.
 	 *
@@ -50,7 +58,8 @@ public interface IRemote extends Remote {
 	 * @throws RemoteException the remote exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public byte[] obtain(String fileName, String leafNodeIP) throws RemoteException, IOException;
+//	public byte[] obtain(String fileName, String leafNodeIP) throws RemoteException, IOException;
+	public P2PFile obtain(String fileName, String leafNodeIP) throws RemoteException, IOException;
 	
 	/**
 	 * Check upstream map.
@@ -59,5 +68,8 @@ public interface IRemote extends Remote {
 	 * @return true, if successful
 	 * @throws RemoteException the remote exception
 	 */
-	public boolean checkUpstreamMap(MessageID messageId) throws RemoteException;
+	public boolean checkUpstreamMap(MessageID messageID) throws RemoteException;
+	
+	public void invalidate(MessageID messageID, P2PFile p2pFile, String upstreamIP) throws RemoteException;
+	public long poll(P2PFile p2pFile) throws RemoteException;
 }

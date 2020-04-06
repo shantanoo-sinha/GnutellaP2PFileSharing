@@ -1,6 +1,10 @@
 F:\Workspace\GnutellaP2PFileSharing\src\main\java\util\DirectoryWatcher.java
+F:\Workspace\GnutellaP2PFileSharing\src\main\java\util\FileDownloader.java
 F:\Workspace\GnutellaP2PFileSharing\src\main\java\client\Client.java
+F:\Workspace\GnutellaP2PFileSharing\src\main\java\util\P2PTimerTask.java
 F:\Workspace\GnutellaP2PFileSharing\src\main\java\server\Server.java
+F:\Workspace\GnutellaP2PFileSharing\src\main\java\model\FileConsistencyState.java
 F:\Workspace\GnutellaP2PFileSharing\src\main\java\server\IRemote.java
 F:\Workspace\GnutellaP2PFileSharing\src\main\java\util\Constants.java
+F:\Workspace\GnutellaP2PFileSharing\src\main\java\model\P2PFile.java
 F:\Workspace\GnutellaP2PFileSharing\src\main\java\model\MessageID.java

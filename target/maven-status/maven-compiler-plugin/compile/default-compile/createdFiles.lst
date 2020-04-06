@@ -1,7 +1,11 @@
-util\Constants.class
 model\MessageID.class
-util\DirectoryWatcher.class
 server\Server$1.class
+model\FileConsistencyState.class
+model\P2PFile.class
+util\P2PTimerTask.class
+server\Server.class
+util\Constants.class
+util\DirectoryWatcher.class
 client\Client.class
 server\IRemote.class
-server\Server.class
+util\FileDownloader.class

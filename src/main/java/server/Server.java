@@ -14,18 +14,25 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import client.Client;
+import model.FileConsistencyState;
 import model.MessageID;
+import model.P2PFile;
 import util.Constants;
-import util.DirectoryWatcher;
+import util.FileDownloader;
+import util.P2PTimerTask;
 
 /**
  * The Class Server.
@@ -43,21 +50,27 @@ public class Server implements IRemote, Serializable {
 	/** The id. */
 	private String id;
 	
+	private Client client;
+	
 	/** The leaf node address. */
 	private String nodeAddress;
 	
-	/** The files directory. */
-	private File filesDirectory;
+	/** The masterFiles directory. */
+	/*private File filesDirectory;*/
 	
 	/** The ttl. */
 	private long TTL;
+	private long TTR;
+	private boolean isPull = false;
 	
 	/** The peer network topology. */
 	private String peerNetworkTopology;
 	
-	/** The files. */
-	private Map<File, Object> files = new ConcurrentHashMap<File, Object>();
+	/** The masterFiles. */
+	/*private Map<File, Object> masterFiles = new ConcurrentHashMap<File, Object>();*/
+	private Map<File, Object> cachedFiles = new ConcurrentHashMap<File, Object>();
 	
+	private Map<String, Server> superPeerLeafNodes = new HashMap<>();
 	/*private Map<String, Map<File, Object>> leafNodeFiles = new ConcurrentHashMap<String, Map<File,Object>>();*/
 	
 	/** The neighbours. */
@@ -86,6 +99,7 @@ public class Server implements IRemote, Serializable {
 	
 	/** The leaf nodes. */
 	private List<String> leafNodes = new ArrayList<>();
+	public Map<String, Client> leafNodesMap = new HashMap<>();
 	/**
 	 * Instantiates a new server.
 	 */
@@ -99,20 +113,24 @@ public class Server implements IRemote, Serializable {
 	 * @param id the id
 	 * @param peerNetworkTopology the peer network topology
 	 */
-	public Server(String id, String peerNetworkTopology) {
+	public Server(Client client, String id, String peerNetworkTopology, long TTR) {
 		this();
 		this.id = id;
+		this.client = client;
 		this.peerNetworkTopology = peerNetworkTopology;
+		this.TTR = TTR;
+		if(TTR>0)
+			setPull(true);
 		
 		//initalize the server
 		init();
 		
-		if (!isSuperPeer)
+		/*if (!isSuperPeer)
 			this.filesDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
-					+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.FILES_FOLDER);
+					+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.FILES_FOLDER);*/
 		
-		//register the available files for a leaf node
-		registerFiles();
+		//register the available masterFiles for a leaf node
+		/*registerFiles();*/
 		
 		//register the neigbours of a super peer node
 		getNeighbors();
@@ -131,6 +149,20 @@ public class Server implements IRemote, Serializable {
 				return size() >= upstreamMapMaxSize;
 			}
 		};
+		
+		if(isPull()) {
+			logger.info("[" + this.id + "] Scheduling timer task");
+			Timer timer = new Timer();
+	        timer.schedule(new P2PTimerTask(this), 0, TTR);
+	 
+	        /*while (true) {
+	            try {
+	                Thread.sleep((long)(TTR*0.9));
+	            } catch (InterruptedException e) {
+	                logger.error("InterruptedException Exception" + e.getMessage());
+	            }
+	        }*/
+		}
 	}
 
 	/**
@@ -170,22 +202,22 @@ public class Server implements IRemote, Serializable {
 	}
 
 	/**
-	 * Gets the files.
+	 * Gets the masterFiles.
 	 *
-	 * @return the files
-	 */
+	 * @return the masterFiles
+	 *//*
 	public Map<File, Object> getFiles() {
-		return files;
+		return masterFiles;
 	}
 
-	/**
-	 * Sets the files.
+	*//**
+	 * Sets the masterFiles.
 	 *
-	 * @param files            the files to set
-	 */
+	 * @param masterFiles            the masterFiles to set
+	 *//*
 	public void setFiles(Map<File, Object> files) {
-		this.files = files;
-	}
+		this.masterFiles = files;
+	}*/
 
 	/**
 	 * Gets the neighbours.
@@ -206,22 +238,22 @@ public class Server implements IRemote, Serializable {
 	}
 
 	/**
-	 * Gets the files directory.
+	 * Gets the masterFiles directory.
 	 *
 	 * @return the filesDirectory
-	 */
+	 *//*
 	public File getFilesDirectory() {
 		return filesDirectory;
 	}
 
-	/**
-	 * Sets the files directory.
+	*//**
+	 * Sets the masterFiles directory.
 	 *
 	 * @param filesDirectory            the filesDirectory to set
-	 */
+	 *//*
 	public void setFilesDirectory(File filesDirectory) {
 		this.filesDirectory = filesDirectory;
-	}
+	}*/
 	
 	/**
 	 * Gets the upstream map.
@@ -257,6 +289,14 @@ public class Server implements IRemote, Serializable {
 		return isSuperPeer;
 	}
 
+	public long getTTR() {
+		return TTR;
+	}
+
+	public void setTTR(long tTR) {
+		TTR = tTR;
+	}
+
 	/**
 	 * Inits the.
 	 *
@@ -265,6 +305,18 @@ public class Server implements IRemote, Serializable {
 	/*public Map<String, Map<File, Object>> getLeafNodeFiles() {
 		return leafNodeFiles;
 	}*/
+	
+	public boolean isPull() {
+		return isPull;
+	}
+
+	public void setPull(boolean isPull) {
+		this.isPull = isPull;
+	}
+
+	public List<String> getLeafNodes() {
+		return leafNodes;
+	}
 
 	/**
 	 * Inits the Server.
@@ -282,7 +334,7 @@ public class Server implements IRemote, Serializable {
 			// Initialize the RMI Registry
 			IRemote stub = (IRemote) UnicastRemoteObject.exportObject(this, 0);
 			Registry registry = LocateRegistry.getRegistry();
-			registry.rebind(Constants.RMI_LOCALHOST + prop.getProperty(id + ".port").trim() + Constants.PEER_SERVER, stub);
+			registry.rebind(Constants.RMI_LOCALHOST + prop.getProperty(id + Constants.PORT).trim() + Constants.PEER_SERVER, stub);
 			
 			/*logger.info("[" + this.id + "] Available peers:");
 			for (String boundName : registry.list()) {
@@ -309,7 +361,7 @@ public class Server implements IRemote, Serializable {
 			//loading the configuration from the topology file
 			is = new FileInputStream(new File(TOPOLOGY_FILE_PATH + File.separator + peerNetworkTopology + Constants.TXT));
 			prop.load(is);
-			this.nodeAddress = Constants.RMI_LOCALHOST + prop.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
+			this.nodeAddress = Constants.RMI_LOCALHOST + prop.getProperty(id + Constants.PORT).trim() + Constants.PEER_SERVER;
 //			this.TTL = prop.entrySet().stream().filter(key -> key.toString().startsWith(Constants.CLIENT_PREFIX)).count();
 //			this.TTL = prop.getProperty(Constants.SUPER_PEER).split(Constants.SPLIT_REGEX).length+1;
 			this.TTL = prop.getProperty(Constants.SUPER_PEER).split(Constants.SPLIT_REGEX).length * 2;
@@ -340,8 +392,8 @@ public class Server implements IRemote, Serializable {
 				logger.info("*******************************************************************");
 				logger.info("[" + this.id + "] This is a Super Peer.");
 				
-				Arrays.asList(prop.getProperty(id + ".leaf").split(Constants.SPLIT_REGEX)).forEach(x -> leafNodes
-						.add(Constants.RMI_LOCALHOST + prop.getProperty(x + ".port").trim() + Constants.PEER_SERVER));
+				Arrays.asList(prop.getProperty(id + Constants.LEAF).split(Constants.SPLIT_REGEX)).forEach(x -> leafNodes
+						.add(Constants.RMI_LOCALHOST + prop.getProperty(x + Constants.PORT).trim() + Constants.PEER_SERVER));
 				
 				logger.info("[" + this.id + "] Connected leaf nodes:");
 				leafNodes.forEach(leafNode -> {
@@ -353,8 +405,8 @@ public class Server implements IRemote, Serializable {
 				logger.info("*******************************************************************");
 				logger.info("[" + this.id + "] This is a leaf node.");
 				Arrays.asList(prop.getProperty(Constants.SUPER_PEER).split(Constants.SPLIT_REGEX)).forEach(x -> {
-					if (Arrays.asList(prop.getProperty(x + ".leaf").split(Constants.SPLIT_REGEX)).contains(this.id))
-						superPeer = Constants.RMI_LOCALHOST + prop.getProperty(x + ".port").trim() + Constants.PEER_SERVER;
+					if (Arrays.asList(prop.getProperty(x + Constants.LEAF).split(Constants.SPLIT_REGEX)).contains(this.id))
+						superPeer = Constants.RMI_LOCALHOST + prop.getProperty(x + Constants.PORT).trim() + Constants.PEER_SERVER;
 				});
 				logger.info("[" + this.id + "] Connected Super Peer:" + superPeer);
 				logger.info("*******************************************************************");
@@ -366,49 +418,49 @@ public class Server implements IRemote, Serializable {
 	}
 
 	/**
-	 * Register files.
-	 */
+	 * Register masterFiles.
+	 *//*
 	public void registerFiles() {
 		if (isSuperPeer)
 			return;
 		
-		//loading files information
+		//loading masterFiles information
 		File[] filesArr = filesDirectory.listFiles();
 		logger.info("*******************************************************************");
 		logger.info("[" + this.id + "] " + this.id + " Files Directory:" + filesDirectory);
 		logger.info("[" + this.id + "] " + this.id + " Available Files:");
 		for (int i = 0; i < filesArr.length; i++) {
 			logger.info("[" + this.id + "] " + filesArr[i].getName());
-			files.put(filesArr[i], filesArr[i]);
+			masterFiles.put(filesArr[i], filesArr[i]);
 		}
 		new Thread(new DirectoryWatcher(this)).start();
-		logger.info("[" + this.id + "] " + this.id + " Files Count:" + files.size());
+		logger.info("[" + this.id + "] " + this.id + " Files Count:" + masterFiles.size());
 		logger.info("*******************************************************************");
-	}
+	}*/
 
 	/**
 	 * Delete file.
 	 *
 	 * @param fileName the file name
 	 * @throws RemoteException the remote exception
-	 */
+	 *//*
 	public void deleteFile(String fileName) throws RemoteException {
 		logger.info("[" + this.id + "] " + "Deleting Server file...");
 		removeFileFromRegistry(fileName);
-		logger.info("[" + this.id + "] " + "Updated Server files count:" + files.size());
+		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
 	}
 	
-	/**
+	*//**
 	 * Adds the file.
 	 *
 	 * @param fileName the file name
 	 * @throws RemoteException the remote exception
-	 */
+	 *//*
 	public void addFile(String fileName) throws RemoteException {
 		logger.info("[" + this.id + "] " + "Updating Server file...");
 		addFileToRegistry(fileName);
-		logger.info("[" + this.id + "] " + "Updated Server files count:" + files.size());
-	}
+		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
+	}*/
 
 	/**
 	 * Query.
@@ -420,10 +472,15 @@ public class Server implements IRemote, Serializable {
 	public void query(MessageID messageID, String fileName) throws RemoteException {
 
 		try {
-			long fileCount = files.size();
+//			long fileCount = masterFiles.size();
+			long fileCount = client.getMasterFiles().size() + client.getSharedFiles().size();
 			// query current leaf node
-			if (files.containsKey(new File(filesDirectory + File.separator + fileName))) {
-				logger.info("[" + this.id + "] " + "Requested file " + fileName + " is already present on the requesting client");
+			//if (masterFiles.containsKey(new File(filesDirectory + File.separator + fileName))) {
+			if (client.getMasterFiles().containsKey(getFileObj(client.getMasterFilesDirectory(), fileName))
+					|| (client.getSharedFiles().containsKey(getFileObj(client.getSharedFilesDirectory(), fileName))
+							&& client.getSharedFiles().get(getFileObj(client.getSharedFilesDirectory(), fileName)).getState().equals(FileConsistencyState.VALID))) {
+				logger.info("[" + this.id + "] " + "Requested file " + fileName
+						+ " is already present on the requesting client");
 				return;
 			} else {
 				//querying super peer
@@ -432,7 +489,12 @@ public class Server implements IRemote, Serializable {
 					upstreamMap.put(messageID, nodeAddress);
 				query(messageID, this.TTL-1, fileName, nodeAddress);
 			}
-			if(files.size() == fileCount && !files.containsKey(new File(filesDirectory + File.separator + fileName))) {
+			/*if(masterFiles.size() == fileCount && !masterFiles.containsKey(new File(filesDirectory + File.separator + fileName))) {
+				logger.info("[" + this.id + "] Requested file is not present on any of the Clients. Please try with a different file.");
+			}*/
+			if((client.getMasterFiles().size() + client.getSharedFiles().size()) == fileCount 
+					&& !client.getMasterFiles().containsKey(getFileObj(client.getMasterFilesDirectory(), fileName))
+					&& !client.getSharedFiles().containsKey(getFileObj(client.getSharedFilesDirectory(), fileName))) {
 				logger.info("[" + this.id + "] Requested file is not present on any of the Clients. Please try with a different file.");
 			}
 		} catch (Exception e) {
@@ -482,6 +544,14 @@ public class Server implements IRemote, Serializable {
 							e.printStackTrace();
 						}
 					}
+					/*for(Map.Entry<String, Client> entry : leafNodesMap.entrySet()) {
+						if(entry.getKey().equalsIgnoreCase(upstreamIP))
+							continue;
+						logger.info("[" + this.id + "] " + "Looking file: " + fileName + " on connected leaf node: " + entry.getKey());
+						if(entry.getValue().getFiles().containsKey(new File(entry.getValue().getFilesDirectory() + File.separator + fileName))) {
+							queryHit(messageID, TTL - 1, fileName, entry.getValue().getServer().nodeAddress);
+						}
+					}*/
 					
 					// querying other super peers
 					logger.info("[" + this.id + "] Requesting file on other Super Peers");
@@ -492,7 +562,7 @@ public class Server implements IRemote, Serializable {
 							continue;
 						}
 							
-						String neighbourSuperPeerAddress = Constants.RMI_LOCALHOST + prop.getProperty(neighbourSuperPeer + ".port").trim() + Constants.PEER_SERVER;
+						String neighbourSuperPeerAddress = Constants.RMI_LOCALHOST + prop.getProperty(neighbourSuperPeer + Constants.PORT).trim() + Constants.PEER_SERVER;
 						Registry registry;
 						try {
 							registry = LocateRegistry.getRegistry();
@@ -508,14 +578,15 @@ public class Server implements IRemote, Serializable {
 							e.printStackTrace();
 						}
 					}
-				} else if (this.files.containsKey(new File(this.filesDirectory + File.separator + fileName))) {
+				} else if ((client.getMasterFiles().containsKey(getFileObj(client.getMasterFilesDirectory(), fileName))
+								&& client.getMasterFiles().get(getFileObj(client.getMasterFilesDirectory(), fileName)).getState().equals(FileConsistencyState.VALID))
+						|| (client.getSharedFiles().containsKey(getFileObj(client.getSharedFilesDirectory(), fileName))
+								&& client.getSharedFiles().get(getFileObj(client.getSharedFilesDirectory(), fileName)).getState().equals(FileConsistencyState.VALID))) {
 					if (!upstreamMap.containsKey(messageID) && TTL >= 0) {
 						upstreamMap.put(messageID, upstreamIP);
 						logger.info("[" + this.id + "] " + "Upstream Address: " + upstreamIP);
 					}
 					logger.info("[" + this.id + "] Requested file: " + fileName + " found on node:" + this.id);
-					/*messageID.setFileNotFoundOnAnyNode(false);
-					messageID.setLeafNodeIdAddress(nodeAddress);*/
 					// sending queryHit message to leaf node
 					queryHit(messageID, TTL - 1, fileName, nodeAddress);
 				} else {
@@ -559,20 +630,19 @@ public class Server implements IRemote, Serializable {
 				logger.info("[" + this.id + "] " + this.id + ": receiving query hit for file:" + fileName + " from " + leafNodeIP);
 				logger.info("[" + this.id + "] " + "Checking just before file download");
 
-				if (this.files.containsKey(new File(this.filesDirectory + File.separator + fileName))) {
+				if (/*this.masterFiles*/client.getSharedFiles().containsKey(getFileObj(/*this.filesDirectory*/client.getSharedFilesDirectory(), fileName))) {
 					logger.info("[" + this.id + "] " + "Requested file " + fileName + " is already present on the requesting client. Skipping downloading again.");
 				} else {
 					logger.info("[" + this.id + "] " + "Requested file download from leaf node " + leafNodeIP);
 					Registry registry = LocateRegistry.getRegistry();
 					IRemote serverStub = (IRemote) registry.lookup(leafNodeIP);
-					byte[] fileContent = serverStub.obtain(fileName, this.nodeAddress);
+					/*byte[] fileContent = serverStub.obtain(fileName, this.nodeAddress);
 					if(writeFileContent(fileContent, fileName)) {
 						logger.info("[" + this.id + "] " + "Requested file " + fileName + " downloaded successfully.");
-						/*messageID.setFileNotFoundOnAnyNode(false);
-						messageID.setLeafNodeIdAddress(nodeAddress);*/
 					} else {
 						logger.info("[" + this.id + "] " + "Failed to download the requested file " + fileName + ".");
-					}
+					}*/
+					new FileDownloader(serverStub, this, fileName).start();
 				}
 			} else {
 				// back propagating queryHit message to the requestor leaf node
@@ -591,42 +661,74 @@ public class Server implements IRemote, Serializable {
 	/* (non-Javadoc)
 	 * @see server.IRemote#obtain(java.lang.String)
 	 */
-	public byte[] obtain(String fileName, String leafNodeIP) throws IOException {
+	public P2PFile obtain(String fileName, String leafNodeIP) throws IOException {
 		byte[] fileContent = null;
+		String filePath = null;
+		P2PFile p2pFile = null;
 		try {
 			// reading file content
-			logger.info("[" + this.id + "] " + "Starting sending file content from " + this.filesDirectory + File.separator + fileName + " to requesting node " + leafNodeIP);
-			fileContent = Files.readAllBytes(Paths.get(this.filesDirectory + File.separator + fileName));
-			logger.info("[" + this.id + "] " + "Finished sending file content from " + this.filesDirectory + File.separator + fileName + " to requesting node " + leafNodeIP);
+			if(client.getMasterFiles().containsKey(getFileObj(client.getMasterFilesDirectory(),fileName))) {
+				filePath = client.getMasterFilesDirectory() + File.separator + fileName;
+				p2pFile = client.getMasterFiles().get(new File(filePath));
+			} else {
+				filePath = client.getSharedFilesDirectory() + File.separator + fileName;
+				p2pFile = client.getSharedFiles().get(new File(filePath));
+			}
+			
+			logger.info("[" + this.id + "] " + "Starting sending file content from " + filePath + " to requesting node " + leafNodeIP);
+			fileContent = Files.readAllBytes(Paths.get(filePath));
+			p2pFile.setFileContent(fileContent);
+			logger.info("[" + this.id + "] " + "Finished sending file content from " + filePath  + " to requesting node " + leafNodeIP);
+			
+		} catch (Exception e) {
+			logger.error("[" + this.id + "] " + "Server exception: Failed to read the requested file content" + e.getMessage());
+			e.printStackTrace();
+			fileContent = "Failed to read the requested file content. Please try again.".getBytes();
+		}
+		return p2pFile;
+	}
+	/*public byte[] obtain(String fileName, String leafNodeIP) throws IOException {
+		byte[] fileContent = null;
+		String directory = null;
+		try {
+			// reading file content
+			if(client.getMasterFiles().containsKey(getFileObj(client.getMasterFilesDirectory(),fileName)))
+				directory = client.getMasterFilesDirectory() + File.separator + fileName;
+			else
+				directory = client.getSharedFilesDirectory() + File.separator + fileName;
+			
+			logger.info("[" + this.id + "] " + "Starting sending file content from " + directory + " to requesting node " + leafNodeIP);
+			fileContent = Files.readAllBytes(Paths.get(directory));
+			logger.info("[" + this.id + "] " + "Finished sending file content from " + directory  + " to requesting node " + leafNodeIP);
 		} catch (Exception e) {
 			logger.error("[" + this.id + "] " + "Server exception: Failed to read the requested file content" + e.getMessage());
 			e.printStackTrace();
 			fileContent = "Failed to read the requested file content. Please try again.".getBytes();
 		}
 		return fileContent;
-	}
+	}*/
 
 	/**
 	 * Adds the file to registry.
 	 *
 	 * @param fileName the file name
 	 * @return true, if successful
-	 */
+	 *//*
 	private synchronized boolean addFileToRegistry(String fileName) {
-		files.put(new File(filesDirectory + File.separator + fileName), new File(filesDirectory + File.separator + fileName));
+		masterFiles.put(new File(filesDirectory + File.separator + fileName), new File(filesDirectory + File.separator + fileName));
 		return true;
 	}
 	
-	/**
+	*//**
 	 * Removes the file from registry.
 	 *
 	 * @param fileName the file name
 	 * @return true, if successful
-	 */
+	 *//*
 	private synchronized boolean removeFileFromRegistry(String fileName) {
-		files.remove(new File(filesDirectory + File.separator + fileName), new File(filesDirectory + File.separator + fileName));
+		masterFiles.remove(new File(filesDirectory + File.separator + fileName), new File(filesDirectory + File.separator + fileName));
 		return true;
-	}
+	}*/
 
 	/**
 	 * Write file content.
@@ -635,16 +737,19 @@ public class Server implements IRemote, Serializable {
 	 * @param fileName the file name
 	 * @return true, if successful
 	 */
-	public boolean writeFileContent(byte[] fileContent, String fileName) {
+	public boolean writeFileContent(P2PFile p2pFile, String fileName) {
 		// writing file to leaf node
 		FileOutputStream fileOutputStream = null;
 		boolean isFileDownloaded = false;
 		boolean isFileAddedToRegistry = false;
 		try {
-			logger.info("[" + this.id + "] " + "Writing File Content: " + filesDirectory + File.separator + fileName);
-			fileOutputStream = new FileOutputStream(new File(filesDirectory + File.separator + fileName));
-			fileOutputStream.write(fileContent);
-			isFileAddedToRegistry = addFileToRegistry(fileName);
+			logger.info("[" + this.id + "] " + "Writing File Content: " + /*filesDirectory*/client.getSharedFilesDirectory() + File.separator + fileName);
+			fileOutputStream = new FileOutputStream(getFileObj(client.getSharedFilesDirectory(), fileName));
+			fileOutputStream.write(p2pFile.getFileContent());
+			logger.info(p2pFile.getVersion() + ", " + p2pFile.getTTR() + ", " + p2pFile.getOriginServerID() + ", " + getFileObj(client.getSharedFilesDirectory(), p2pFile.getFileName()) + ", " + p2pFile.getFileName() + ", " + p2pFile.getState());
+			P2PFile localP2PFile = new P2PFile(p2pFile.getVersion(), p2pFile.getTTR(), p2pFile.getOriginServerID(), null, getFileObj(client.getSharedFilesDirectory(), p2pFile.getFileName()), p2pFile.getFileName(), p2pFile.getState());
+			/*isFileAddedToRegistry = addFileToRegistry(fileName);*/
+			isFileAddedToRegistry = client.addSharedFileToRegistry(fileName, localP2PFile);
 			if(isFileAddedToRegistry)
 				isFileDownloaded = true;
 		} catch (Exception e) {
@@ -679,10 +784,10 @@ public class Server implements IRemote, Serializable {
 			String clientNeighbour = prop.getProperty(id + ".next");
 			if (clientNeighbour != null) {
 				neighbours = (Arrays.asList(clientNeighbour.split(Constants.SPLIT_REGEX)));
-				logger.info("[" + this.id + "] " + id + " (Running on port:" + prop.getProperty(id + ".port") + ") Super Peer neighbours:");
+				logger.info("[" + this.id + "] " + id + " (Running on port:" + prop.getProperty(id + Constants.PORT) + ") Super Peer neighbours:");
 				neighbours.forEach(x -> {
 					//String str = getPropertyFromValue(x);
-					logger.info("[" + this.id + "] " + x + "(Port:" + prop.getProperty(x + ".port") + ")");	
+					logger.info("[" + this.id + "] " + x + "(Port:" + prop.getProperty(x + Constants.PORT) + ")");	
 				});
 			}
 		} catch (Exception e) {
@@ -769,7 +874,7 @@ public class Server implements IRemote, Serializable {
 	
 	/*private List<String> queryMySuperPeer(MessageID messageID, long TTL, String fileName, String upstreamIP, List<String> leafNodesWithFile) {
 		List<String> leafNodesWithFile = new ArrayList<>();
-		String superPeerAddress = Constants.RMI_LOCALHOST + prop.getProperty(superPeer + ".port").trim() + Constants.PEER_SERVER;
+		String superPeerAddress = Constants.RMI_LOCALHOST + prop.getProperty(superPeer + Constants.PORT).trim() + Constants.PEER_SERVER;
 		logger.info("[" + this.id + "] " + "Looking file: " + fileName + " on Super Peer: " + superPeerAddress);
 		Registry registry;
 		try {
@@ -789,4 +894,181 @@ public class Server implements IRemote, Serializable {
 		}
 		return leafNodesWithFile;
 	}*/
+	
+	public Client getClient() {
+		return this.client;
+	}
+
+	/**
+	 * @return the leafNodesMap
+	 */
+	/*@Override
+	public Map<String, Client> getLeafNodesMap() {
+		return this.leafNodesMap;
+	}
+	
+	@Override
+	public void addToLeafNodesMap(String key, Client value) {
+		this.leafNodesMap.put(key, value);
+	}*/
+	
+	private File getFileObj(File dir, String fileName) {
+		return new File(dir + File.separator + fileName);
+	}
+
+	@Override
+	public void invalidate(MessageID messageID, P2PFile p2pFile, String upstreamIP) throws RemoteException {
+
+		try {
+			logger.info("[" + this.id + "] " + "file invalidate: " + p2pFile.getFileName() + ", TTL:" + TTL + ", messageID:" + messageID );
+			logger.info("[" + this.id + "] " + "file invalidate received from : " + p2pFile.getOriginServerID());
+			
+				if(isSuperPeer) {
+					//sending invalidate message to super peer
+					if (!upstreamMap.containsKey(messageID)) {
+						upstreamMap.put(messageID, upstreamIP);
+						logger.info("[" + this.id + "] " + "Upstream Address: " + upstreamIP);
+					}
+
+					// sending file invalidate message to leaf nodes
+					logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName() + " on connected " + nodeAddress + " leaf nodes");	
+					for(String leafNodeAddress: leafNodes) {
+						if(leafNodeAddress.equalsIgnoreCase(upstreamIP))
+							continue;
+						logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName() + " on connected leaf node: " + leafNodeAddress);
+						Registry registry;
+						try {
+							registry = LocateRegistry.getRegistry();
+							IRemote serverStub = (IRemote) registry.lookup(leafNodeAddress);
+							
+							if(!serverStub.checkUpstreamMap(messageID)) {
+								logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName()  + " on connected leaf node:" + leafNodeAddress);	
+								serverStub.invalidate(messageID, p2pFile, upstreamIP);
+							} else {
+								logger.info("[" + this.id + "] " + leafNodeAddress + " already saw the message file invalidate message for file: " + p2pFile.getFileName()  + " . Hence, skipping.");
+							}
+							
+						} catch (Exception e) {
+							logger.error("[" + this.id + "] " + "Server exception: Unable to send file invalidate message to leaf nodes.");
+							e.printStackTrace();
+						}
+					}
+					
+					// sending file invalidate message to other super peers
+					logger.info("[" + this.id + "] Sending file invalidate message for file: " + p2pFile.getFileName() + " on other Super Peers");
+					List<String> neighbourSuperPeers = Arrays.asList(prop.getProperty(Constants.SUPER_PEER).split(Constants.SPLIT_REGEX));
+					
+					for(String neighbourSuperPeer: neighbourSuperPeers) {
+						
+						if(neighbourSuperPeer.equals(this.id)) {
+							//logger.info("[" + this.id + "] Skip sending the message to self.");
+							continue;
+						}
+							
+						String neighbourSuperPeerAddress = Constants.RMI_LOCALHOST + prop.getProperty(neighbourSuperPeer + Constants.PORT).trim() + Constants.PEER_SERVER;
+						Registry registry;
+						try {
+							registry = LocateRegistry.getRegistry();
+							IRemote serverStub = (IRemote) registry.lookup(neighbourSuperPeerAddress);
+							if(!serverStub.checkUpstreamMap(messageID)) {
+								logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName() + " on neighbour Super Peer:" + neighbourSuperPeerAddress);	
+								serverStub.invalidate(messageID, p2pFile, nodeAddress);
+							} else {
+								logger.info("[" + this.id + "] " + neighbourSuperPeerAddress + " already saw the file invalidate message. Hence, skipping.");
+							}
+						} catch (Exception e) {
+							logger.error("[" + this.id + "] " + "Server exception: Unable to query neighbours.");
+							e.printStackTrace();
+						}
+					}
+				} else if (client.getSharedFiles().containsKey(getFileObj(client.getSharedFilesDirectory(), p2pFile.getFileName()))
+						&& client.getSharedFiles().get(getFileObj(client.getSharedFilesDirectory(), p2pFile.getFileName())).getState().equals(FileConsistencyState.VALID)
+						&& client.getSharedFiles().get(getFileObj(client.getSharedFilesDirectory(), p2pFile.getFileName())).getVersion() != p2pFile.getVersion()) {
+					if (!upstreamMap.containsKey(messageID)) {
+						upstreamMap.put(messageID, upstreamIP);
+						logger.info("[" + this.id + "] " + "Upstream Address: " + upstreamIP);
+					}
+					logger.info("[" + this.id + "] Invalidating file: " + p2pFile.getFileName() + " on node:" + this.id);
+					// Invalidating file
+					
+					File fileObj = getFileObj(client.getSharedFilesDirectory(), p2pFile.getFileName());
+					if(fileObj.isFile() && fileObj.exists())
+						fileObj.delete();
+					client.getSharedFiles().remove(fileObj);
+					
+					
+				} else {
+					if (!upstreamMap.containsKey(messageID)) {
+						upstreamMap.put(messageID, upstreamIP);
+						logger.info("[" + this.id + "] " + "Upstream Address: " + upstreamIP);
+					}
+					// querying super peer
+					Registry registry;
+					try {
+						registry = LocateRegistry.getRegistry();
+						IRemote serverStub = (IRemote) registry.lookup(superPeer);
+						logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName() + " on Super Peer:" + superPeer);	
+						
+						if(!serverStub.checkUpstreamMap(messageID)) {
+							logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName() + " on connected Super Peer:" + superPeer);	
+							serverStub.invalidate(messageID, p2pFile, nodeAddress);
+						} else {
+							logger.info("[" + this.id + "] " + superPeer + " already saw the file invalidate message. Hence, skipping.");
+						}
+						
+					} catch (Exception e) {
+						logger.error("[" + this.id + "] " + "Server exception: Unable to send file invalidate message to connected Super Peer.");
+						e.printStackTrace();
+					}
+				}
+		} catch (Exception e) {
+			logger.error("[" + this.id + "] " + "Server exception: Unable to send file invalidate message to Server.");
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public long poll(P2PFile p2pFile) throws RemoteException {
+		long pollOutput = -1l;
+		logger.info("[" + this.id + "] " + "Comparing version with master copy");
+		logger.info("client.getMasterFiles(): " + client.getMasterFiles().size());
+		for(Map.Entry<File, P2PFile> entry: client.getMasterFiles().entrySet()) {
+			logger.info(entry.getKey() + "," + entry.getValue().getFile() + "," + entry.getValue().getFileName() + "," + entry.getValue().getVersion() + "," + entry.getValue().getOriginServerID());
+		}
+		
+		if(client.getMasterFiles().containsKey(getFileObj(client.getMasterFilesDirectory(), p2pFile.getFileName())))
+			logger.info("File found. Now comparing version");
+		logger.info("Master:" + client.getMasterFiles().get(getFileObj(client.getMasterFilesDirectory(), p2pFile.getFileName())).getVersion());
+		logger.info("Shared:" + p2pFile.getVersion());
+		if(client.getMasterFiles().containsKey(getFileObj(client.getMasterFilesDirectory(), p2pFile.getFileName()))
+				&& client.getMasterFiles().get(getFileObj(client.getMasterFilesDirectory(), p2pFile.getFileName())).getVersion() == p2pFile.getVersion()) {
+			pollOutput = getTTR();
+		}
+		return pollOutput;
+	}
+
+	@Override
+	public List<P2PFile> getFiles() throws RemoteException {
+		return this.client.getSharedFiles().values().stream().collect(Collectors.toList());
+	}
+
+	@Override
+	public List<P2PFile> queryLeafNodes() throws RemoteException {
+		// querying leaf nodes
+		logger.info("[" + this.id + "] " + "Looking files on connected leaf nodes");
+		List<P2PFile> files = new ArrayList<>();
+		for(String leafNodeAddress: leafNodes) {
+			Registry registry;
+			try {
+				registry = LocateRegistry.getRegistry();
+				IRemote serverStub = (IRemote) registry.lookup(leafNodeAddress);
+				files.addAll(serverStub.getFiles());
+			} catch (Exception e) {
+				logger.error("[" + this.id + "] " + "Server exception: Unable to query leaf nodes.");
+				e.printStackTrace();
+			}
+		}
+		return files;
+	}
+	
 }
