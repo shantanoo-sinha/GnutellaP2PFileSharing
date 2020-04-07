@@ -2,12 +2,16 @@ package client;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -58,9 +62,10 @@ public class Client implements Serializable {
 	/** The sequence number. */
 	private Long sequenceNumber = 0l;
 	
-	private Map<File, P2PFile> masterFiles = new ConcurrentHashMap<File, P2PFile>();
-	private Map<File, P2PFile> sharedFiles = new ConcurrentHashMap<File, P2PFile>();
-
+	/*private Map<File, P2PFile> masterFiles = new ConcurrentHashMap<File, P2PFile>();
+	private Map<File, P2PFile> sharedFiles = new ConcurrentHashMap<File, P2PFile>();*/
+	private Map<String, P2PFile> masterFiles = new ConcurrentHashMap<String, P2PFile>();
+	private Map<String, P2PFile> sharedFiles = new ConcurrentHashMap<String, P2PFile>();
 	/**
 	 * Instantiates a new client.
 	 *
@@ -245,22 +250,22 @@ public class Client implements Serializable {
 	/**
 	 * @return the masterFiles
 	 */
-	public Map<File, P2PFile> getMasterFiles() {
+	public Map</*File*/String, P2PFile> getMasterFiles() {
 		return masterFiles;
 	}
 
-	public void addToMasterFiles(File file, P2PFile fileDetails) {
+	public void addToMasterFiles(/*File file*/String file, P2PFile fileDetails) {
 		this.masterFiles.put(file, fileDetails);
 	}
 
 	/**
 	 * @return the sharedFiles
 	 */
-	public Map<File, P2PFile> getSharedFiles() {
+	public Map</*File*/String, P2PFile> getSharedFiles() {
 		return sharedFiles;
 	}
 
-	public void addToSharedFiles(File file, P2PFile fileDetails) {
+	public void addToSharedFiles(/*File */String file, P2PFile fileDetails) {
 		this.sharedFiles.put(file, fileDetails);
 	}
 
@@ -281,11 +286,17 @@ public class Client implements Serializable {
 				continue;
 			logger.info("[" + this.id + "] " + filesArr[i].getName());
 			/*masterFiles.put(filesArr[i], filesArr[i]);*/
-			addToMasterFiles(filesArr[i], new P2PFile(1, 100, this.server.getIpAddress(), null, filesArr[i], filesArr[i].getName(), FileConsistencyState.VALID));
+//			addToMasterFiles(filesArr[i], new P2PFile(1, 100, this.server.getIpAddress(), null, filesArr[i], filesArr[i].getName(), FileConsistencyState.VALID));
+			addToMasterFiles(filesArr[i].getName(), new P2PFile(1, 100, this.server.getIpAddress(), this.server.getSuperPeer(), this.server.getIpAddress(), null, filesArr[i], filesArr[i].getName(), FileConsistencyState.VALID));
 		}
 		new Thread(new DirectoryWatcher(this)).start();
 		logger.info("[" + this.id + "] " + this.id + " Master Files Count:" + masterFiles.size());
 		logger.info("[" + this.id + "] " + this.id + " Shared Files Count:" + sharedFiles.size());
+		logger.info("*******************************************************************");
+		
+		logger.info("[" + this.id + "] Registering master files to Super Peer");
+		server.registerMasterFilesToSuperPeer();
+		logger.info("[" + this.id + "] Master files registered to Super Peer");
 		logger.info("*******************************************************************");
 	}
 	
@@ -324,13 +335,13 @@ public class Client implements Serializable {
 	}
 	
 	public synchronized boolean addSharedFileToRegistry(String fileName, P2PFile p2PFile) {
-		addToSharedFiles(getFileObj(sharedFilesDirectory, fileName), p2PFile);
+		addToSharedFiles(/*getFileObj(sharedFilesDirectory, fileName)*/fileName, p2PFile);
 		return true;
 	}
 	
-	private File getFileObj(File dir, String fileName) {
+	/*private File getFileObj(File dir, String fileName) {
 		return new File(dir + File.separator + fileName);
-	}
+	}*/
 	
 	private synchronized boolean removeSharedFileFromRegistry(String fileName) {
 		sharedFiles.remove(new File(sharedFilesDirectory + File.separator + fileName), new File(sharedFilesDirectory + File.separator + fileName));
@@ -345,15 +356,26 @@ public class Client implements Serializable {
 		String leafNodeId = Constants.RMI_LOCALHOST + server.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
 		MessageID messageID = new MessageID(leafNodeId, sequenceNumber++);
 		try {
-        	//logger.info("[" + this.id + "] Querying file " + fileName + " from " + id);
         	server.query(messageID, fileName);
-//        	server.query(messageID, server.getTTL(), fileName, server.getIpAddress());
         } catch (Exception e) {
         	logger.error("[" + this.id + "] Client exception: Unable to retrieve file.");
             logger.error("[" + this.id + "] Unable to query file " + fileName + " from " + leafNodeId + ":\n" + e.toString());
             e.printStackTrace();
         }
     }
+	
+	private void refreshFile(String fileName) {
+		try {
+			if(getSharedFiles().containsKey(fileName))
+				server.refresh(getSharedFiles().get(fileName));
+			else
+				logger.info("[" + this.id + "] Requested file is not present in shared list. Unable to refresh file.");
+        } catch (Exception e) {
+        	logger.error("[" + this.id + "] Client exception: Unable to refresh file.");
+            logger.error("[" + this.id + "] Unable to refresh file " + fileName + " from " + getSharedFiles().get(fileName).getOriginServerID() + ":\n" + e.toString());
+            e.printStackTrace();
+        }		
+	}
 	
 	/**
 	 * The main method.
@@ -395,12 +417,29 @@ public class Client implements Serializable {
 
 		if(client.server.isSuperPeer()) {
 			while (true) {
-				
+				for(Map.Entry<String, Map</*File*/String, P2PFile>> entry : client.server.getLeafNodeMasterFiles().entrySet()) {
+					logger.info("[" + id + "] " + "leaf node: " + entry.getKey() + ", Master files size" + entry.getValue().size());
+				}
+				for(Map.Entry<String, Map</*File*/String, P2PFile>> entry : client.server.getLeafNodeSharedFiles().entrySet()) {
+					logger.info("[" + id + "] " + "leaf node: " + entry.getKey() + ", Shared files size" + entry.getValue().size());
+					for(Map.Entry<String, P2PFile> val : entry.getValue().entrySet()) {
+						logger.info("[" + id + "] " + val.getValue().getFileName() + ", Version: " + val.getValue().getVersion() + ", Origin: " + val.getValue().getOriginServerID()
+						+ ", Origin Super Peer: " + val.getValue().getOriginServerSuperPeerID() + "State: " + val.getValue().getState());
+					}
+				}
+				try {
+					Thread.sleep(100000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		} else {
 			Scanner scanner = new Scanner(System.in);
 			String input;
 			logger.info("\nEnter 'exit' to exit the application"
+					+ "\nEnter 'print' to print the files with version and state information"
+					+ "\nEnter file name followed by 'refresh' keyword to re-download the existing file"
 					+ "\nEnter the name of file (with extension) you want to download:\n");
 			
 			while (true) {
@@ -411,11 +450,40 @@ public class Client implements Serializable {
 					logger.info("\nClient exiting...\n");
 					scanner.close();
 					System.exit(0);
+				} else if (input.contains("refresh")) {
+					long startTime = System.currentTimeMillis();
+					client.refreshFile(input.substring(0, (input.length()-("refresh".length()))).trim());
+					long endTime = System.currentTimeMillis();
+					long elapsedTime = endTime - startTime;
+					double elapsedTimeInMSecond = (double) elapsedTime / 1000.000;
+					logger.info("Process completed in " + TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.MILLISECONDS) + "(" + elapsedTimeInMSecond + ") second");
+				} else if (input.startsWith("update")) {
+					String fileName = null;
+					if(input.split(" ").length>1)
+						fileName = input.split(" ")[1];
+					long startTime = System.currentTimeMillis();
+					client.simulateUpdate(fileName);
+					long endTime = System.currentTimeMillis();
+					long elapsedTime = endTime - startTime;
+					double elapsedTimeInMSecond = (double) elapsedTime / 1000.000;
+					logger.info("Process completed in " + TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.MILLISECONDS) + "(" + elapsedTimeInMSecond + ") second");
+				} else if (input.equalsIgnoreCase("print")) {
+					logger.info("[" + id + "] " + "Printing file information:");
+					logger.info("[" + id + "] " + "Master Files:");
+					client.masterFiles.forEach((key, val) -> {
+						logger.info("[" + id + "] " + val.getFileName() + ", Version: " + val.getVersion());
+					});
+					logger.info("[" + id + "] " + "Shared Files:");
+					client.sharedFiles.forEach((key, val) -> {
+						logger.info("[" + id + "] " + val.getFileName() + ", Version: " + val.getVersion() + ", Origin: " + val.getOriginServerID()
+						+ ", Origin Super Peer: " + val.getOriginServerSuperPeerID() + "State: " + val.getState());
+					});
 				} else if (input != null && (input.trim().contains(Constants.SPACE) || !input.trim().contains(Constants.DOT))) {
 					logger.info("Incorrect command");
 					logger.info("USAGE: <file name with extension>");
 					logger.info("EXAMPLE: <123.txt>");
 					logger.info("EXAMPLE: <e or exit>");
+					logger.info("EXAMPLE: <print>");
 				} else {
 					long startTime = System.currentTimeMillis();
 					if(input.contains(";")) {
@@ -433,6 +501,8 @@ public class Client implements Serializable {
 					double elapsedTimeInMSecond = (double) elapsedTime / 1000.000;
 					logger.info("Process completed in " + TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.MILLISECONDS) + "(" + elapsedTimeInMSecond + ") second");
 				}
+				logger.info("Master File Count" + client.masterFiles.size());
+				logger.info("Shared File Count" + client.sharedFiles.size());
 				logger.info("\nEnter 'exit' to exit the application"
 						+ "\nEnter the name of file (with extension) you want to download:\n");
 			}
@@ -440,32 +510,50 @@ public class Client implements Serializable {
 	}
 
 	public void modifyMasterFile(String fileName) {
-		P2PFile p2pFile = this.masterFiles.get(getFileObj(masterFilesDirectory, fileName));
+		P2PFile p2pFile = this.masterFiles.get(fileName);
 		p2pFile.incrementVersion();
-		String leafNodeId = Constants.RMI_LOCALHOST + server.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
-		MessageID messageID = new MessageID(leafNodeId, sequenceNumber++);
 		try {
-			if("Push".equalsIgnoreCase(pushOrPull))
+			server.registerMasterFilesToSuperPeer();
+			
+			if("Push".equalsIgnoreCase(pushOrPull)) {
+				String leafNodeId = Constants.RMI_LOCALHOST + server.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
+				MessageID messageID = new MessageID(leafNodeId, sequenceNumber++);
+				
 				server.invalidate(messageID, p2pFile, this.server.getIpAddress());
+			}
 		} catch (RemoteException e) {
+			logger.error("[" + id + "] " + "Client exception: Unable to modify master file.");
 			e.printStackTrace();
 		}
 	}
 	
-	/*public void simulateUpdate(){
-        
-                ConsistentFile cf = fileMap.get(fileName);
-                cf.setVersion(cf.getVersion() +  1);
-                if(mode.equals("push")) {
-                    invalidateNeighbors(new Pair(fileName, cf.getVersion()));
-                    Collections.shuffle(originIndex);
-                    fileName = originIndex.get(0);
-                    System.out.println(fileName + " has been updated");
-                    int delay = (int)nextExponentialDelay(5.0 * 1000.0);
-                    System.out.println("Next pseudoupdate will be in " + delay + " milliseconds");
-                    updateTimer = new Timer(delay, this);
-                    updateTimer.setRepeats(false);
-                    updateTimer.start();
-        
-    }*/
+	public void simulateUpdate(String fileName){
+		try {
+			if(fileName == null) {
+				Object[] fileNames = masterFiles.keySet().toArray();
+				Object key = fileNames[new Random().nextInt(fileNames.length)];
+				logger.info("[" + id + "] " + "************ Updating a random Master File ************ \n" + key + " :: " + masterFiles.get(key).getFile());
+				
+				if(masterFiles.get(key).getFile().exists() && masterFiles.get(key).getFile().isFile()) {
+					logger.info("[" + id + "] " + "File " + key + " last modified time:" + masterFiles.get(key).getFile().lastModified());
+					Files.setLastModifiedTime(masterFiles.get(key).getFile().toPath(), FileTime.fromMillis(System.currentTimeMillis()));
+				}
+				logger.info("[" + id + "] " + "File " + key + " last modified time updated to:" + masterFiles.get(key).getFile().lastModified());
+					
+			} else {
+				if(masterFiles.containsKey(fileName) && masterFiles.get(fileName).getFile().exists() && masterFiles.get(fileName).getFile().isFile()) {
+					logger.info("[" + id + "] " + "************ Updating Master File ************ \n" + fileName);
+					logger.info("[" + id + "] " + "File " + fileName + " last modified time:" + masterFiles.get(fileName).getFile().lastModified());
+					Files.setLastModifiedTime(masterFiles.get(fileName).getFile().toPath(), FileTime.fromMillis(System.currentTimeMillis()));
+					logger.info("[" + id + "] " + "File " + fileName + " last modified time updated to:" + masterFiles.get(fileName).getFile().lastModified());
+				} else {
+					logger.info("[" + id + "] File does not exist");
+				}
+			}
+		} catch (IOException e) {
+			logger.error("[" + id + "] " + "Client exception: Unable to simulate master file update.");
+			e.printStackTrace();
+		}
+		
+    }
 }

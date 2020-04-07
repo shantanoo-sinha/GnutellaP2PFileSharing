@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Map;
 
 import model.MessageID;
 import model.P2PFile;
@@ -24,6 +25,10 @@ public interface IRemote extends Remote {
 	public void addToLeafNodesMap(String key, Client value) throws RemoteException;*/
 	public List<P2PFile> getFiles() throws RemoteException;
 	public List<P2PFile> queryLeafNodes() throws RemoteException;
+	
+	public void registerMasterFilesToSuperPeer(String leafNodeAddress, Map</*File*/String, P2PFile> files) throws RemoteException;
+	public void registerSharedFilesToSuperPeer(String leafNodeAddress, Map</*File*/String, P2PFile> files) throws RemoteException;
+	public void updateSharedFilesToSuperPeer(String leafNodeAddress, Map</*File*/String, P2PFile> files) throws RemoteException;
 	/**
 	 * Query.
 	 *
@@ -71,5 +76,7 @@ public interface IRemote extends Remote {
 	public boolean checkUpstreamMap(MessageID messageID) throws RemoteException;
 	
 	public void invalidate(MessageID messageID, P2PFile p2pFile, String upstreamIP) throws RemoteException;
+	public void invalidate(List<P2PFile> p2pFiles) throws RemoteException;
 	public long poll(P2PFile p2pFile) throws RemoteException;
+	public List<P2PFile> poll(List<P2PFile> p2pFiles) throws RemoteException;
 }

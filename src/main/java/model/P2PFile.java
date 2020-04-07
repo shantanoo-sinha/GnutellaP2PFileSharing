@@ -20,6 +20,8 @@ public class P2PFile implements Serializable{
 	private int version = 1;
 	private int TTR;
 	private String originServerID;
+	private String originServerSuperPeerID;
+	private String currentAddress;
 	byte[] fileContent;
 	private File file;
 	private String fileName;
@@ -29,17 +31,21 @@ public class P2PFile implements Serializable{
 	 * @param version
 	 * @param tTR
 	 * @param originServerID
+	 * @param originServerSuperPeerID
+	 * @param currentAddress
 	 * @param fileContent
 	 * @param file
 	 * @param fileName
 	 * @param state
 	 */
-	public P2PFile(int version, int tTR, String originServerID, byte[] fileContent, File file, String fileName,
+	public P2PFile(int version, int tTR, String originServerID, String originServerSuperPeerID, String currentAddress, byte[] fileContent, File file, String fileName,
 			FileConsistencyState state) {
 		super();
 		this.version = version;
-		TTR = tTR;
+		this.TTR = tTR;
 		this.originServerID = originServerID;
+		this.originServerSuperPeerID = originServerSuperPeerID;
+		this.currentAddress = currentAddress;
 		this.fileContent = fileContent;
 		this.file = file;
 		this.fileName = fileName;
@@ -63,6 +69,18 @@ public class P2PFile implements Serializable{
 	}
 	public void setOriginServerID(String originServerID) {
 		this.originServerID = originServerID;
+	}
+	public String getOriginServerSuperPeerID() {
+		return originServerSuperPeerID;
+	}
+	public void setOriginServerSuperPeerID(String originServerSuperPeerID) {
+		this.originServerSuperPeerID = originServerSuperPeerID;
+	}
+	public String getCurrentAddress() {
+		return currentAddress;
+	}
+	public void setCurrentAddress(String currentAddress) {
+		this.currentAddress = currentAddress;
 	}
 	public byte[] getFileContent() {
 		return fileContent;

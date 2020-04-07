@@ -2,6 +2,10 @@ package util;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.TimerTask;
 
 import org.apache.logging.log4j.LogManager;
@@ -38,32 +42,66 @@ public class P2PTimerTask extends TimerTask {
 			registry = LocateRegistry.getRegistry();
 			IRemote serverStub = null;
 			if(server.isSuperPeer()) {
-				/*List<P2PFile> leafNodeFiles = new ArrayList<>();
-				for(String leafNodeAddress: server.getLeafNodes()) {
-					logger.info("[" + this.server.getId() + "] " + "Getting leaf node shared file objects.");
-					serverStub = (IRemote) registry.lookup(leafNodeAddress);
-					leafNodeFiles.addAll(serverStub.getFiles());
+				/*for(Map.Entry<String, Map<File, P2PFile>> entry : server.getLeafNodeMasterFiles().entrySet()) {
+					logger.info("[" + this.server.getId() + "] " + "leaf node: " + entry.getKey() + ", Master files size" + entry.getValue().size());
 				}
-				logger.info("[" + this.server.getId() + "] " + "leaf node shared file object size:" + leafNodeFiles.size());
+				for(Map.Entry<String, Map<File, P2PFile>> entry : server.getLeafNodeSharedFiles().entrySet()) {
+					logger.info("[" + this.server.getId() + "] " + "leaf node: " + entry.getKey() + ", Shared files size" + entry.getValue().size());
+				}*/
 				
 				// polling other super peers
 				logger.info("[" + this.server.getId() + "] Polling other Super Peers");
-				List<String> neighbourSuperPeers = Arrays.asList(this.server.getProp().getProperty(Constants.SUPER_PEER).split(Constants.SPLIT_REGEX));
 				
-				for(String neighbourSuperPeer: neighbourSuperPeers) {
-					
-					if(neighbourSuperPeer.equals(this.server.getId())) {
+				logger.info("[" + this.server.getId() + "] getLeafNodeSharedFiles count: " + this.server.getLeafNodeSharedFiles().values().size());
+				Map<String, List<P2PFile>> filesPerSuperPeer = new HashMap<>();
+				for(Map<String, P2PFile> files : this.server.getLeafNodeSharedFiles().values()) {
+					for(P2PFile p2pFile : files.values()) {
+						if(!filesPerSuperPeer.containsKey(p2pFile.getOriginServerSuperPeerID()))
+							filesPerSuperPeer.put(p2pFile.getOriginServerSuperPeerID(), new ArrayList<P2PFile>());
+						filesPerSuperPeer.get(p2pFile.getOriginServerSuperPeerID()).add(p2pFile);
+					}
+				}
+				logger.info("[" + this.server.getId() + "] filesPerSuperPeer count: " + filesPerSuperPeer.size());
+				List<P2PFile> allFiles = new ArrayList<>();
+				for(Map.Entry<String, List<P2PFile>> entry : filesPerSuperPeer.entrySet()) {
+					/*if(entry.getKey().equals(this.server.getIpAddress())) {
 						//logger.info("[" + this.server.getId() + "] Skip sending the message to self.");
 						continue;
-					}
-						
-					String neighbourSuperPeerAddress = Constants.RMI_LOCALHOST + this.server.getProp().getProperty(neighbourSuperPeer + Constants.PORT).trim() + Constants.PEER_SERVER;
-					serverStub = (IRemote) registry.lookup(neighbourSuperPeerAddress);
-					
-					logger.info("[" + this.server.getId() + "] " + "Polling neighbour Super Peer:" + neighbourSuperPeerAddress);	
-//					long pollResult = serverStub.poll(p2pFile);
-						
+					}*/
+
+					serverStub = (IRemote) registry.lookup(entry.getKey());
+					logger.info("[" + this.server.getId() + "] " + "Polling neighbour Super Peer:" + entry.getKey() + " for " + entry.getValue().size() + " files");
+					allFiles.addAll(serverStub.poll(entry.getValue()));
+				}
+				/*for(P2PFile p : allFiles) {
+					System.out.println(p.getFileName());
+					System.out.println(p.getOriginServerID());
+					System.out.println(p.getOriginServerSuperPeerID());
+					System.out.println(p.getCurrentAddress());
+					System.out.println(p.getVersion());
+					System.out.println(p.getState());
 				}*/
+				Map<String, List<P2PFile>> filesPerLeafNode = new HashMap<>();
+				for(P2PFile file : allFiles) {
+					if(file.getState().equals(FileConsistencyState.EXPIRED)) {
+						if(!filesPerLeafNode.containsKey(file.getCurrentAddress()))
+							filesPerLeafNode.put(file.getCurrentAddress(), new ArrayList<P2PFile>());
+						filesPerLeafNode.get(file.getCurrentAddress()).add(file);
+					}
+				}
+				for(Map.Entry<String, List<P2PFile>> entry : filesPerLeafNode.entrySet()) {
+					serverStub = (IRemote) registry.lookup(entry.getKey());
+					logger.info("[" + this.server.getId() + "] " + "Invalidating " + entry.getValue().size() + " files on leaf node:" + entry.getKey());
+					serverStub.invalidate(entry.getValue());
+					for(P2PFile p2pFile : entry.getValue()) {
+						for(Map.Entry<String, Map<String, P2PFile>> leafNodeSharedFiles : this.server.getLeafNodeSharedFiles().entrySet()) {
+							if(leafNodeSharedFiles.getValue().containsKey(p2pFile.getFileName())) {
+								leafNodeSharedFiles.getValue().get(p2pFile.getFileName()).setState(FileConsistencyState.EXPIRED);
+							}
+						}
+					}
+				}
+				
 			} else {
 				// polling other master leaf nodes
 				logger.info("[" + this.server.getId() + "] Polling other master leaf nodes");
@@ -74,6 +112,12 @@ public class P2PTimerTask extends TimerTask {
 					if(pollResult<0) {
 						val.setState(FileConsistencyState.EXPIRED);
 						logger.info("[" + this.server.getId() + "] " + "File " + val.getFileName() + " validity expired. Please refresh the file.");
+						
+						serverStub = (IRemote) registry.lookup(this.server.getSuperPeer());
+						logger.info("[" + this.server.getId() + "] " + "Invalidate file: " + val.getFileName() + " on Super Peer:" + this.server.getSuperPeer());	
+						serverStub.updateSharedFilesToSuperPeer(this.server.getId(), this.server.getClient().getSharedFiles());
+					} else {
+						logger.info("[" + this.server.getId() + "] " + "File:" + val.getFileName() + " in sync with master leaf node:" + val.getOriginServerID());
 					}
 				}
 			}
