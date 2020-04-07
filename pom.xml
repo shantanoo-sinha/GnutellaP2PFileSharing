@@ -152,6 +152,43 @@
 					</execution>
 				</executions>
 			</plugin>
+		
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>create-folder</id>
+						<phase>install</phase>
+						<configuration>
+							<tasks>
+								<mkdir dir="target/${project.name}/Clients/Client2/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client3/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client5/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client6/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client8/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client9/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client11/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client12/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client14/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client15/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client17/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client18/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client20/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client21/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client23/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client24/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client26/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client27/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client29/files/shared" />
+								<mkdir dir="target/${project.name}/Clients/Client30/files/shared" />
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
