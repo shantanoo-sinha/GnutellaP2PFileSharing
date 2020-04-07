@@ -9,61 +9,61 @@ echo Starting Clients...
 
 echo Starting Client 1...
 cd Clients\Client1
-START /MAX Client1-linear.bat
+START /MAX Client1-all-to-all.bat Push 100
 echo Client1 started...
 timeout /t 2
 
 echo Starting Client 4...
 cd ..\Client4
-START /MAX Client4-linear.bat
+START /MAX Client4-all-to-all.bat Push 100
 echo Client4 started...
 timeout /t 2
 
 echo Starting Client 7...
 cd ..\Client7
-START /MAX Client7-linear.bat
+START /MAX Client7-all-to-all.bat Push 100
 echo Client7 started...
 timeout /t 2
 
 echo Starting Client 10...
 cd ..\Client10
-START /MAX Client10-linear.bat
+START /MAX Client10-all-to-all.bat Push 100
 echo Client10 started...
 timeout /t 2
 
 echo Starting Client 13...
 cd ..\Client13
-START /MAX Client13-linear.bat
+START /MAX Client13-all-to-all.bat Push 100
 echo Client13 started...
 timeout /t 2
 
 echo Starting Client 16...
 cd ..\Client16
-START /MAX Client16-linear.bat
+START /MAX Client16-all-to-all.bat Push 100
 echo Client16 started...
 timeout /t 2
 
 echo Starting Client 19...
 cd ..\Client19
-START /MAX Client19-linear.bat
+START /MAX Client19-all-to-all.bat Push 100
 echo Client19 started...
 timeout /t 2
 
 echo Starting Client 22...
 cd ..\Client22
-START /MAX Client22-linear.bat
+START /MAX Client22-all-to-all.bat Push 100
 echo Client22 started...
 timeout /t 2
 
 echo Starting Client 25...
 cd ..\Client25
-START /MAX Client25-linear.bat
+START /MAX Client25-all-to-all.bat Push 100
 echo Client25 started...
 timeout /t 2
 
 echo Starting Client 28...
 cd ..\Client28
-START /MAX Client28-linear.bat
+START /MAX Client28-all-to-all.bat Push 100
 echo Client28 started...
 timeout /t 60
 
@@ -71,121 +71,121 @@ timeout /t 60
 
 echo Starting Client 2...
 cd ..\Client2
-START /MAX Client2-linear.bat
+START /MAX Client2-all-to-all.bat Push 100
 echo Client2 started...
 timeout /t 2
 
 echo Starting Client 3...
 cd ..\Client3
-START /MAX Client3-linear.bat
+START /MAX Client3-all-to-all.bat Push 100
 echo Client3 started...
 timeout /t 2
 
 echo Starting Client 5...
 cd ..\Client5
-START /MAX Client5-linear.bat
+START /MAX Client5-all-to-all.bat Push 100
 echo Client5 started...
 timeout /t 2
 
 echo Starting Client 6...
 cd ..\Client6
-START /MAX Client6-linear.bat
+START /MAX Client6-all-to-all.bat Push 100
 echo Client6 started...
 timeout /t 2
 
 echo Starting Client 8...
 cd ..\Client8
-START /MAX Client8-linear.bat
+START /MAX Client8-all-to-all.bat Push 100
 echo Client8 started...
 timeout /t 2
 
 echo Starting Client 9...
 cd ..\Client9
-START /MAX Client9-linear.bat
+START /MAX Client9-all-to-all.bat Push 100
 echo Client9 started...
 timeout /t 2
 
 echo Starting Client 11...
 cd ..\Client11
-START /MAX Client11-linear.bat
+START /MAX Client11-all-to-all.bat Push 100
 echo Client11 started...
 timeout /t 2
 
 echo Starting Client 12...
 cd ..\Client12
-START /MAX Client12-linear.bat
+START /MAX Client12-all-to-all.bat Push 100
 echo Client12 started...
 timeout /t 2
 
 echo Starting Client 14...
 cd ..\Client14
-START /MAX Client14-linear.bat
+START /MAX Client14-all-to-all.bat Push 100
 echo Client14 started...
 timeout /t 2
 
 echo Starting Client 15...
 cd ..\Client15
-START /MAX Client15-linear.bat
+START /MAX Client15-all-to-all.bat Push 100
 echo Client15 started...
 timeout /t 2
 
 echo Starting Client 17...
 cd ..\Client17
-START /MAX Client17-linear.bat
+START /MAX Client17-all-to-all.bat Push 100
 echo Client17 started...
 timeout /t 2
 
 echo Starting Client 18...
 cd ..\Client18
-START /MAX Client18-linear.bat
+START /MAX Client18-all-to-all.bat Push 100
 echo Client18 started...
 timeout /t 2
 
 echo Starting Client 20...
 cd ..\Client20
-START /MAX Client20-linear.bat
+START /MAX Client20-all-to-all.bat Push 100
 echo Client20 started...
 timeout /t 2
 
 echo Starting Client 21...
 cd ..\Client21
-START /MAX Client21-linear.bat
+START /MAX Client21-all-to-all.bat Push 100
 echo Client21 started...
 timeout /t 2
 
 echo Starting Client 23...
 cd ..\Client23
-START /MAX Client23-linear.bat
+START /MAX Client23-all-to-all.bat Push 100
 echo Client23 started...
 timeout /t 2
 
 echo Starting Client 24...
 cd ..\Client24
-START /MAX Client24-linear.bat
+START /MAX Client24-all-to-all.bat Push 100
 echo Client24 started...
 timeout /t 2
 
 echo Starting Client 26...
 cd ..\Client26
-START /MAX Client26-linear.bat
+START /MAX Client26-all-to-all.bat Push 100
 echo Client26 started...
 timeout /t 2
 
 echo Starting Client 27...
 cd ..\Client27
-START /MAX Client27-linear.bat
+START /MAX Client27-all-to-all.bat Push 100
 echo Client27 started...
 timeout /t 2
 
 echo Starting Client 29...
 cd ..\Client29
-START /MAX Client29-linear.bat
+START /MAX Client29-all-to-all.bat Push 100
 echo Client29 started...
 timeout /t 2
 
 echo Starting Client 30...
 cd ..\Client30
-START /MAX Client30-linear.bat
+START /MAX Client30-all-to-all.bat Push 100
 echo Client30 started...
 timeout /t 2
 
