@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package util;
 
 import java.rmi.registry.LocateRegistry;
@@ -16,24 +19,34 @@ import model.P2PFile;
 import server.IRemote;
 import server.Server;
 
+/**
+ * The Class P2PTimerTask.
+ */
+/**
+ * @author Shantanoo
+ *
+ */
 public class P2PTimerTask extends TimerTask {
 
 	/** The Constant logger. */
 	private static final Logger logger = LogManager.getLogger(P2PTimerTask.class);
 	
+	/** The server. */
 	private Server server;
 	
 	/**
-	 * @param remote
-	 * @param server
-	 * @param fileName
-	 * @param p2pFile
+	 * Instantiates a new p 2 P timer task.
+	 *
+	 * @param server the server
 	 */
 	public P2PTimerTask(Server server) {
 		super();
 		this.server = server;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.util.TimerTask#run()
+	 */
 	@Override
 	public void run() {
 		logger.info("[" + this.server.getId() + "] Starting polling");
@@ -42,13 +55,6 @@ public class P2PTimerTask extends TimerTask {
 			registry = LocateRegistry.getRegistry();
 			IRemote serverStub = null;
 			if(server.isSuperPeer()) {
-				/*for(Map.Entry<String, Map<File, P2PFile>> entry : server.getLeafNodeMasterFiles().entrySet()) {
-					logger.info("[" + this.server.getId() + "] " + "leaf node: " + entry.getKey() + ", Master files size" + entry.getValue().size());
-				}
-				for(Map.Entry<String, Map<File, P2PFile>> entry : server.getLeafNodeSharedFiles().entrySet()) {
-					logger.info("[" + this.server.getId() + "] " + "leaf node: " + entry.getKey() + ", Shared files size" + entry.getValue().size());
-				}*/
-				
 				// polling other super peers
 				logger.info("[" + this.server.getId() + "] Polling other Super Peers");
 				
@@ -73,14 +79,6 @@ public class P2PTimerTask extends TimerTask {
 					logger.info("[" + this.server.getId() + "] " + "Polling neighbour Super Peer:" + entry.getKey() + " for " + entry.getValue().size() + " files");
 					allFiles.addAll(serverStub.poll(entry.getValue()));
 				}
-				/*for(P2PFile p : allFiles) {
-					System.out.println(p.getFileName());
-					System.out.println(p.getOriginServerID());
-					System.out.println(p.getOriginServerSuperPeerID());
-					System.out.println(p.getCurrentAddress());
-					System.out.println(p.getVersion());
-					System.out.println(p.getState());
-				}*/
 				Map<String, List<P2PFile>> filesPerLeafNode = new HashMap<>();
 				for(P2PFile file : allFiles) {
 					if(file.getState().equals(FileConsistencyState.EXPIRED)) {
@@ -125,6 +123,5 @@ public class P2PTimerTask extends TimerTask {
 			logger.error("[" + this.server.getId() + "] " + "Server exception: Unable to poll.");
 			e.printStackTrace();
 		}
-		
 	}
 }

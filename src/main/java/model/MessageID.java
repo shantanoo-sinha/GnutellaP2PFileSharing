@@ -21,12 +21,6 @@ public class MessageID implements Serializable {
 	/** The sequence number. */
 	private Long sequenceNumber = 0L;
 	
-	/** The leaf node id address. */
-//	private String leafNodeIdAddress;
-	
-	/** The file not found on any node. */
-//	private boolean fileNotFoundOnAnyNode = true;
-	
 	/**
 	 * Instantiates a new message ID.
 	 */
@@ -34,44 +28,6 @@ public class MessageID implements Serializable {
 		super();
 	}
 	
-	/**
-	 * Gets the leaf node id address.
-	 *
-	 * @param leafNodeId the leaf node id
-	 * @param sequenceNumber the sequence number
-	 * @return the leafNodeIdAddress
-	 */
-	/*public String getLeafNodeIdAddress() {
-		return leafNodeIdAddress;
-	}*/
-
-	/**
-	 * Sets the leaf node id address.
-	 *
-	 * @param leafNodeIdAddress the leafNodeIdAddress to set
-	 */
-	/*public void setLeafNodeIdAddress(String leafNodeIdAddress) {
-		this.leafNodeIdAddress = leafNodeIdAddress;
-	}*/
-
-	/**
-	 * Checks if is file not found on any node.
-	 *
-	 * @return the fileNotFoundOnAnyNode
-	 */
-	/*public boolean isFileNotFoundOnAnyNode() {
-		return fileNotFoundOnAnyNode;
-	}*/
-
-	/**
-	 * Sets the file not found on any node.
-	 *
-	 * @param fileNotFoundOnAnyNode the fileNotFoundOnAnyNode to set
-	 */
-	/*public void setFileNotFoundOnAnyNode(boolean fileNotFoundOnAnyNode) {
-		this.fileNotFoundOnAnyNode = fileNotFoundOnAnyNode;
-	}*/
-
 	/**
 	 * Instantiates a new message ID.
 	 *

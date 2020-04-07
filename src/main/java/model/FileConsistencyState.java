@@ -4,9 +4,16 @@
 package model;
 
 /**
- * @author Shantanoo
+ * The Enum FileConsistencyState.
  *
+ * @author Shantanoo
  */
 public enum FileConsistencyState {
-    VALID, INVALID, EXPIRED
+
+	/** The valid. */
+	VALID,
+	/** The invalid. */
+	INVALID,
+	/** The expired. */
+	EXPIRED
 }

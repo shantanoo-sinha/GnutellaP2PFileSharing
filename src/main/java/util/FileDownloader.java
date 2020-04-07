@@ -7,20 +7,33 @@ import model.P2PFile;
 import server.IRemote;
 import server.Server;
 
+/**
+ * The Class FileDownloader.
+ */
+/**
+ * @author Shantanoo
+ *
+ */
 public class FileDownloader extends Thread {
 
 	/** The Constant logger. */
 	private static final Logger logger = LogManager.getLogger(FileDownloader.class);
 	
+	/** The remote. */
 	private IRemote remote;
+	
+	/** The server. */
 	private Server server;
+	
+	/** The file name. */
 	private String fileName;
-	/*private P2PFile p2PFile;*/
 	
 	/**
-	 * @param remote
-	 * @param server
-	 * @param fileName
+	 * Instantiates a new file downloader.
+	 *
+	 * @param remote the remote
+	 * @param server the server
+	 * @param fileName the file name
 	 */
 	public FileDownloader(IRemote remote, Server server, String fileName) {
 		super();
@@ -29,6 +42,9 @@ public class FileDownloader extends Thread {
 		this.fileName = fileName;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Thread#run()
+	 */
 	public void run() {
 		try {
 			logger.info("[" + server.getId() + "] " + "Requested file download from leaf node " + server.getIpAddress());

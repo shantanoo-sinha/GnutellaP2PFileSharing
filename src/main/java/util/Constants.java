@@ -34,7 +34,11 @@ public class Constants {
 	
 	/** The Constant FILES_FOLDER. */
 	public static final String FILES_FOLDER = "files";
+	
+	/** The Constant MASTER_FOLDER. */
 	public static final String MASTER_FOLDER = "master";
+	
+	/** The Constant SHARED_FOLDER. */
 	public static final String SHARED_FOLDER = "shared";
 	
 	/** The Constant DOT. */
@@ -64,7 +68,9 @@ public class Constants {
 	/** The Constant LEAF_NODE. */
 	public static final String LEAF_NODE = "LeafNode";
 
+	/** The Constant PORT. */
 	public static final String PORT = ".port";
 
+	/** The Constant LEAF. */
 	public static final String LEAF = ".leaf";
 }

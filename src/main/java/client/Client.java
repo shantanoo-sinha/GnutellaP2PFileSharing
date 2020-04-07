@@ -33,9 +33,7 @@ import util.DirectoryWatcher;
  */
 public class Client implements Serializable {
 	
-	/**
-	 * 
-	 */
+	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 559133148017097116L;
 
 
@@ -51,20 +49,28 @@ public class Client implements Serializable {
 	/** The files dir path. */
 	private String filesDirPath = null;
 	
+	/** The ttr. */
 	private static long TTR = -1l;
+	
+	/** The push or pull. */
 	private static String pushOrPull = null;
 	
+	/** The master files directory. */
 	private File masterFilesDirectory;
+	
+	/** The shared files directory. */
 	private File sharedFilesDirectory;
 	
+	/** The user dir. */
 	private File USER_DIR = new File(System.getProperty(Constants.USER_DIR));
 	
 	/** The sequence number. */
 	private Long sequenceNumber = 0l;
 	
-	/*private Map<File, P2PFile> masterFiles = new ConcurrentHashMap<File, P2PFile>();
-	private Map<File, P2PFile> sharedFiles = new ConcurrentHashMap<File, P2PFile>();*/
+	/** The master files. */
 	private Map<String, P2PFile> masterFiles = new ConcurrentHashMap<String, P2PFile>();
+	
+	/** The shared files. */
 	private Map<String, P2PFile> sharedFiles = new ConcurrentHashMap<String, P2PFile>();
 	/**
 	 * Instantiates a new client.
@@ -88,8 +94,10 @@ public class Client implements Serializable {
 	/**
 	 * Inits the server.
 	 *
+	 * @param client the client
 	 * @param id the id
 	 * @param peerNetworkTopology the peer network topology
+	 * @param TTR the ttr
 	 */
 	private void initServer(Client client, String id, String peerNetworkTopology, long TTR) {
 		try {
@@ -155,43 +163,8 @@ public class Client implements Serializable {
 	}
 	
 	/**
-	 * Gets the masterFiles.
+	 * Gets the master files directory.
 	 *
-	 * @return the masterFiles
-	 *//*
-	public Map<File, Object> getFiles() {
-		return masterFiles;
-	}
-
-	*//**
-	 * Sets the masterFiles.
-	 *
-	 * @param masterFiles            the masterFiles to set
-	 *//*
-	public void setFiles(Map<File, Object> files) {
-		this.masterFiles = files;
-	}*/
-	
-	/**
-	 * Gets the masterFiles directory.
-	 *
-	 * @return the masterFilesDirectory
-	 *//*
-	public File getFilesDirectory() {
-		return masterFilesDirectory;
-	}
-
-	*//**
-	 * Sets the masterFiles directory.
-	 *
-	 * @param masterFilesDirectory            the masterFilesDirectory to set
-	 *//*
-	public void setFilesDirectory(File filesDirectory) {
-		this.masterFilesDirectory = filesDirectory;
-	}*/
-	
-	
-	/**
 	 * @return the masterFilesDirectory
 	 */
 	public File getMasterFilesDirectory() {
@@ -199,6 +172,8 @@ public class Client implements Serializable {
 	}
 
 	/**
+	 * Sets the master files directory.
+	 *
 	 * @param masterFilesDirectory the masterFilesDirectory to set
 	 */
 	public void setMasterFilesDirectory(File masterFilesDirectory) {
@@ -206,6 +181,8 @@ public class Client implements Serializable {
 	}
 
 	/**
+	 * Gets the shared files directory.
+	 *
 	 * @return the sharedFilesDirectory
 	 */
 	public File getSharedFilesDirectory() {
@@ -213,6 +190,8 @@ public class Client implements Serializable {
 	}
 
 	/**
+	 * Sets the shared files directory.
+	 *
 	 * @param sharedFilesDirectory the sharedFilesDirectory to set
 	 */
 	public void setSharedFilesDirectory(File sharedFilesDirectory) {
@@ -220,6 +199,8 @@ public class Client implements Serializable {
 	}
 
 	/**
+	 * Gets the user dir.
+	 *
 	 * @return the uSER_DIR
 	 */
 	public File getUSER_DIR() {
@@ -227,6 +208,8 @@ public class Client implements Serializable {
 	}
 
 	/**
+	 * Sets the user dir.
+	 *
 	 * @param uSER_DIR the uSER_DIR to set
 	 */
 	public void setUSER_DIR(File uSER_DIR) {
@@ -234,6 +217,8 @@ public class Client implements Serializable {
 	}
 
 	/**
+	 * Gets the sequence number.
+	 *
 	 * @return the sequenceNumber
 	 */
 	public Long getSequenceNumber() {
@@ -241,30 +226,39 @@ public class Client implements Serializable {
 	}
 
 	/**
-	 * @param sequenceNumber the sequenceNumber to set
-	 *//*
-	public void setSequenceNumber(Long sequenceNumber) {
-		this.sequenceNumber = sequenceNumber;
-	}*/
-
-	/**
+	 * Gets the master files.
+	 *
 	 * @return the masterFiles
 	 */
 	public Map</*File*/String, P2PFile> getMasterFiles() {
 		return masterFiles;
 	}
 
+	/**
+	 * Adds the to master files.
+	 *
+	 * @param file the file
+	 * @param fileDetails the file details
+	 */
 	public void addToMasterFiles(/*File file*/String file, P2PFile fileDetails) {
 		this.masterFiles.put(file, fileDetails);
 	}
 
 	/**
+	 * Gets the shared files.
+	 *
 	 * @return the sharedFiles
 	 */
 	public Map</*File*/String, P2PFile> getSharedFiles() {
 		return sharedFiles;
 	}
 
+	/**
+	 * Adds the to shared files.
+	 *
+	 * @param file the file
+	 * @param fileDetails the file details
+	 */
 	public void addToSharedFiles(/*File */String file, P2PFile fileDetails) {
 		this.sharedFiles.put(file, fileDetails);
 	}
@@ -285,8 +279,6 @@ public class Client implements Serializable {
 			if(filesArr[i].isDirectory())
 				continue;
 			logger.info("[" + this.id + "] " + filesArr[i].getName());
-			/*masterFiles.put(filesArr[i], filesArr[i]);*/
-//			addToMasterFiles(filesArr[i], new P2PFile(1, 100, this.server.getIpAddress(), null, filesArr[i], filesArr[i].getName(), FileConsistencyState.VALID));
 			addToMasterFiles(filesArr[i].getName(), new P2PFile(1, 100, this.server.getIpAddress(), this.server.getSuperPeer(), this.server.getIpAddress(), null, filesArr[i], filesArr[i].getName(), FileConsistencyState.VALID));
 		}
 		new Thread(new DirectoryWatcher(this)).start();
@@ -311,12 +303,24 @@ public class Client implements Serializable {
 		return true;
 	}*/
 
+	/**
+	 * Delete master file.
+	 *
+	 * @param fileName the file name
+	 * @throws RemoteException the remote exception
+	 */
 	public void deleteMasterFile(String fileName) throws RemoteException {
 		logger.info("[" + this.id + "] " + "Deleting Server file...");
 		removeMasterFileFromRegistry(fileName);
 		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
 	}
 	
+	/**
+	 * Removes the master file from registry.
+	 *
+	 * @param fileName the file name
+	 * @return true, if successful
+	 */
 	private synchronized boolean removeMasterFileFromRegistry(String fileName) {
 		masterFiles.remove(new File(masterFilesDirectory + File.separator + fileName), new File(masterFilesDirectory + File.separator + fileName));
 		return true;
@@ -328,12 +332,25 @@ public class Client implements Serializable {
 		logger.info("[" + this.id + "] " + "Updated Server sharedFiles count:" + masterFiles.size());
 	}*/
 	
+	/**
+	 * Delete shared file.
+	 *
+	 * @param fileName the file name
+	 * @throws RemoteException the remote exception
+	 */
 	public void deleteSharedFile(String fileName) throws RemoteException {
 		logger.info("[" + this.id + "] " + "Deleting Server file...");
 		removeSharedFileFromRegistry(fileName);
 		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
 	}
 	
+	/**
+	 * Adds the shared file to registry.
+	 *
+	 * @param fileName the file name
+	 * @param p2PFile the p 2 P file
+	 * @return true, if successful
+	 */
 	public synchronized boolean addSharedFileToRegistry(String fileName, P2PFile p2PFile) {
 		addToSharedFiles(/*getFileObj(sharedFilesDirectory, fileName)*/fileName, p2PFile);
 		return true;
@@ -343,6 +360,12 @@ public class Client implements Serializable {
 		return new File(dir + File.separator + fileName);
 	}*/
 	
+	/**
+	 * Removes the shared file from registry.
+	 *
+	 * @param fileName the file name
+	 * @return true, if successful
+	 */
 	private synchronized boolean removeSharedFileFromRegistry(String fileName) {
 		sharedFiles.remove(new File(sharedFilesDirectory + File.separator + fileName), new File(sharedFilesDirectory + File.separator + fileName));
 		return true;
@@ -364,6 +387,11 @@ public class Client implements Serializable {
         }
     }
 	
+	/**
+	 * Refresh file.
+	 *
+	 * @param fileName the file name
+	 */
 	private void refreshFile(String fileName) {
 		try {
 			if(getSharedFiles().containsKey(fileName))
@@ -440,6 +468,7 @@ public class Client implements Serializable {
 			logger.info("\nEnter 'exit' to exit the application"
 					+ "\nEnter 'print' to print the files with version and state information"
 					+ "\nEnter file name followed by 'refresh' keyword to re-download the existing file"
+					+ "\nEnter 'update' followed by file name to update the master file"
 					+ "\nEnter the name of file (with extension) you want to download:\n");
 			
 			while (true) {
@@ -484,6 +513,8 @@ public class Client implements Serializable {
 					logger.info("EXAMPLE: <123.txt>");
 					logger.info("EXAMPLE: <e or exit>");
 					logger.info("EXAMPLE: <print>");
+					logger.info("EXAMPLE: <update 123.txt>");
+					logger.info("EXAMPLE: <123.txt refresh>");
 				} else {
 					long startTime = System.currentTimeMillis();
 					if(input.contains(";")) {
@@ -504,11 +535,19 @@ public class Client implements Serializable {
 				logger.info("Master File Count" + client.masterFiles.size());
 				logger.info("Shared File Count" + client.sharedFiles.size());
 				logger.info("\nEnter 'exit' to exit the application"
+						+ "\nEnter 'print' to print the files with version and state information"
+						+ "\nEnter file name followed by 'refresh' keyword to re-download the existing file"
+						+ "\nEnter 'update' followed by file name to update the master file"
 						+ "\nEnter the name of file (with extension) you want to download:\n");
 			}
 		}
 	}
 
+	/**
+	 * Modify master file.
+	 *
+	 * @param fileName the file name
+	 */
 	public void modifyMasterFile(String fileName) {
 		P2PFile p2pFile = this.masterFiles.get(fileName);
 		p2pFile.incrementVersion();
@@ -527,6 +566,11 @@ public class Client implements Serializable {
 		}
 	}
 	
+	/**
+	 * Simulate update.
+	 *
+	 * @param fileName the file name
+	 */
 	public void simulateUpdate(String fileName){
 		try {
 			if(fileName == null) {
