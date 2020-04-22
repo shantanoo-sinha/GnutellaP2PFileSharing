@@ -23,5 +23,5 @@ if "%TTR%"=="" goto :TTRPrompt
 echo pushOrPull=%pushOrPull%
 echo TTR=%TTR%
 
-java -classpath "F:\Workspace\GnutellaP2PFileSharing\target\GnutellaP2PFileSharing\lib\classes;F:\Workspace\GnutellaP2PFileSharing\target\GnutellaP2PFileSharing\lib\*" -Dlog4j.configurationFile=file:///f:/Workspace/GnutellaP2PFileSharing/target/GnutellaP2PFileSharing/lib/classes/log4j2.properties -Djava.rmi.server.codebase=file:f:/Workspace/GnutellaP2PFileSharing/target/GnutellaP2PFileSharing/lib/classes -Djava.security.policy=file:///f:/Workspace/GnutellaP2PFileSharing/target/GnutellaP2PFileSharing/lib/classes/security.policy client.Client all-to-all Client7 %pushOrPull% %TTR%
+java -classpath "F:\Workspace\GnutellaP2PFileSharing\target\GnutellaP2PFileSharing\lib\classes;F:\Workspace\GnutellaP2PFileSharing\target\GnutellaP2PFileSharing\lib\*" -Dlog4j.configurationFile=file:///f:/Workspace/GnutellaP2PFileSharing/target/GnutellaP2PFileSharing/lib/classes/log4j2.properties -Djava.rmi.server.codebase=file:f:/Workspace/GnutellaP2PFileSharing/target/GnutellaP2PFileSharing/lib/classes -Djava.security.policy=file:///f:/Workspace/GnutellaP2PFileSharing/target/GnutellaP2PFileSharing/lib/classes/security.policy -Djava.rmi.server.logCalls=true -Dsun.rmi.server.exceptionTrace=true client.Client all-to-all Client7 %pushOrPull% %TTR%
 timeout /t 50

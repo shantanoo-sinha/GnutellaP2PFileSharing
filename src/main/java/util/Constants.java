@@ -73,4 +73,7 @@ public class Constants {
 
 	/** The Constant LEAF. */
 	public static final String LEAF = ".leaf";
+	
+	public static final String KEYS_FOLDER = "keys";
+	public static final String SHARED_KEYS_FOLDER = "shared";
 }

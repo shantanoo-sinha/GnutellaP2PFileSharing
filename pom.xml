@@ -111,6 +111,16 @@
 									<filtering>false</filtering>
 								</resource>
 								<resource>
+									<targetPath>${project.name}/lib/classes/security</targetPath>
+									<directory>${basedir}/target/classes/security</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/lib/classes/rmi</targetPath>
+									<directory>${basedir}/target/classes/rmi</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
 									<targetPath>${project.name}/lib/classes/</targetPath>
 									<directory>${basedir}/target/classes</directory>         <!-- source directory -->
 									<filtering>false</filtering>
@@ -228,6 +238,19 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
 			<version>${log4j.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
+		<dependency>
+		    <groupId>commons-codec</groupId>
+		    <artifactId>commons-codec</artifactId>
+		    <version>1.9</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+		    <groupId>junit</groupId>
+		    <artifactId>junit</artifactId>
+		    <version>4.13</version>
+		    <scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

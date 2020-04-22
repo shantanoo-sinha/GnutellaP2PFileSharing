@@ -138,4 +138,6 @@ public interface IRemote extends Remote {
 	 * @throws RemoteException the remote exception
 	 */
 	public List<P2PFile> poll(List<P2PFile> p2pFiles) throws RemoteException;
+	
+	public boolean sharePublicKey(byte[] publicKey, String clientName) throws RemoteException;
 }

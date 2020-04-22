@@ -1,14 +1,22 @@
 package client;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.rmi.RemoteException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -22,6 +30,9 @@ import org.apache.logging.log4j.Logger;
 import model.FileConsistencyState;
 import model.MessageID;
 import model.P2PFile;
+import security.RSA4;
+import security.RSAEncryption;
+import security.RSAKeyPair;
 import server.Server;
 import util.Constants;
 import util.DirectoryWatcher;
@@ -35,7 +46,6 @@ public class Client implements Serializable {
 	
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 559133148017097116L;
-
 
 	/** The Constant logger. */
 	private static final Logger logger = LogManager.getLogger(Client.class);
@@ -72,6 +82,13 @@ public class Client implements Serializable {
 	
 	/** The shared files. */
 	private Map<String, P2PFile> sharedFiles = new ConcurrentHashMap<String, P2PFile>();
+
+	private RSAKeyPair rsaKeyPair;
+	private File keysDirectory;
+	private File sharedKeysDirectory;
+	
+	public String text = "Yellow and Black Border Collies";
+	public BigInteger cipherText;
 	/**
 	 * Instantiates a new client.
 	 *
@@ -88,7 +105,13 @@ public class Client implements Serializable {
 			this.sharedFilesDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
 					+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.FILES_FOLDER + File.separator + Constants.SHARED_FOLDER);
 		}
+		this.keysDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
+				+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.KEYS_FOLDER);
+		this.sharedKeysDirectory = new File(this.keysDirectory + File.separator + Constants.SHARED_KEYS_FOLDER);
 		registerFiles();
+		generateKeys();
+		//initServer(this, id, peerNetworkTopology, TTR);
+		//readKeys(id);
 	}
 
 	/**
@@ -101,7 +124,7 @@ public class Client implements Serializable {
 	 */
 	private void initServer(Client client, String id, String peerNetworkTopology, long TTR) {
 		try {
-			server = new Server(client, id, peerNetworkTopology, TTR);
+			server = new Server(client, id, peerNetworkTopology, TTR, rsaKeyPair);
 		} catch (Exception e) {
 			logger.error("Exception: Unable to initiate Server for client " + id + ":\n" + e.toString());
 			e.printStackTrace();
@@ -262,6 +285,22 @@ public class Client implements Serializable {
 	public void addToSharedFiles(/*File */String file, P2PFile fileDetails) {
 		this.sharedFiles.put(file, fileDetails);
 	}
+	
+	public File getKeysDirectory() {
+		return keysDirectory;
+	}
+
+	public void setKeysDirectory(File keysDirectory) {
+		this.keysDirectory = keysDirectory;
+	}
+	
+	public File getSharedKeysDirectory() {
+		return sharedKeysDirectory;
+	}
+
+	public void setSharedKeysDirectory(File sharedKeysDirectory) {
+		this.sharedKeysDirectory = sharedKeysDirectory;
+	}
 
 	/**
 	 * Register masterFiles.
@@ -415,7 +454,7 @@ public class Client implements Serializable {
 		String id = args[1];
 		
 		pushOrPull = args[2];
-		
+		logger.debug("===================================================================");
 		logger.info("*******************************************************************");
 		logger.info("[" + id + "] " + "Initialized Topology:" + topology);
 		if("Pull".equalsIgnoreCase(pushOrPull)) {
@@ -444,22 +483,44 @@ public class Client implements Serializable {
 		logger.info("*******************************************************************");
 
 		if(client.server.isSuperPeer()) {
+			Scanner scanner = new Scanner(System.in);
+			String input;
+			logger.info("\nEnter 'exit' to exit the application"
+					+ "\nEnter 'print' to print the files with version and state information"
+					+ "\nEnter 'share' to share node's public key with others\n");
+			
 			while (true) {
-				for(Map.Entry<String, Map</*File*/String, P2PFile>> entry : client.server.getLeafNodeMasterFiles().entrySet()) {
-					logger.info("[" + id + "] " + "leaf node: " + entry.getKey() + ", Master files size" + entry.getValue().size());
-				}
-				for(Map.Entry<String, Map</*File*/String, P2PFile>> entry : client.server.getLeafNodeSharedFiles().entrySet()) {
-					logger.info("[" + id + "] " + "leaf node: " + entry.getKey() + ", Shared files size" + entry.getValue().size());
-					for(Map.Entry<String, P2PFile> val : entry.getValue().entrySet()) {
-						logger.info("[" + id + "] " + val.getValue().getFileName() + ", Version: " + val.getValue().getVersion() + ", Origin: " + val.getValue().getOriginServerID()
-						+ ", Origin Super Peer: " + val.getValue().getOriginServerSuperPeerID() + "State: " + val.getValue().getState());
+				input = scanner.nextLine();
+				if (input.equalsIgnoreCase("exit") || input.equalsIgnoreCase("e")) {
+					logger.info("\nExiting Super Peer...\n");
+					scanner.close();
+					System.exit(0);
+				} else if (input.equalsIgnoreCase("share")) {
+					client.server.sharePublicKey();
+				} else if (input.equalsIgnoreCase("print")) {
+					logger.info("[" + id + "] " + "Printing file information:");
+
+					for(Map.Entry<String, Map<String, P2PFile>> entry : client.server.getLeafNodeMasterFiles().entrySet()) {
+						logger.info("[" + id + "] " + "leaf node: " + entry.getKey() + ", Master files size" + entry.getValue().size());
+						
+						for(Map.Entry<String, P2PFile> val : entry.getValue().entrySet()) {
+							logger.info("[" + id + "] " + val.getValue().getFileName() + ", Version: " + val.getValue().getVersion());
+						}
 					}
-				}
-				try {
-					Thread.sleep(100000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					for(Map.Entry<String, Map<String, P2PFile>> entry : client.server.getLeafNodeSharedFiles().entrySet()) {
+						logger.info("[" + id + "] " + "leaf node: " + entry.getKey() + ", Shared files size" + entry.getValue().size());
+						
+						for(Map.Entry<String, P2PFile> val : entry.getValue().entrySet()) {
+							logger.info("[" + id + "] " + val.getValue().getFileName() + ", Version: " + val.getValue().getVersion() + ", Origin: " + val.getValue().getOriginServerID()
+							+ ", Origin Super Peer: " + val.getValue().getOriginServerSuperPeerID() + "State: " + val.getValue().getState());
+						}
+					}
+					
+				} else {
+					logger.info("Incorrect command");
+					logger.info("EXAMPLE: <e or exit>");
+					logger.info("EXAMPLE: <print>");
+					logger.info("EXAMPLE: <share>");
 				}
 			}
 		} else {
@@ -467,8 +528,9 @@ public class Client implements Serializable {
 			String input;
 			logger.info("\nEnter 'exit' to exit the application"
 					+ "\nEnter 'print' to print the files with version and state information"
-					+ "\nEnter file name followed by 'refresh' keyword to re-download the existing file"
+					+ "\nEnter 'refresh' followed by file name to re-download the existing file"
 					+ "\nEnter 'update' followed by file name to update the master file"
+					+ "\nEnter 'share' to share node's public key with others"
 					+ "\nEnter the name of file (with extension) you want to download:\n");
 			
 			while (true) {
@@ -479,9 +541,11 @@ public class Client implements Serializable {
 					logger.info("\nClient exiting...\n");
 					scanner.close();
 					System.exit(0);
-				} else if (input.contains("refresh")) {
+				} else if (input.equalsIgnoreCase("share")) {
+					client.server.sharePublicKey();
+				} else if (input.startsWith("refresh")) {
 					long startTime = System.currentTimeMillis();
-					client.refreshFile(input.substring(0, (input.length()-("refresh".length()))).trim());
+					client.refreshFile(input.substring("refresh".length()).trim());
 					long endTime = System.currentTimeMillis();
 					long elapsedTime = endTime - startTime;
 					double elapsedTimeInMSecond = (double) elapsedTime / 1000.000;
@@ -514,7 +578,8 @@ public class Client implements Serializable {
 					logger.info("EXAMPLE: <e or exit>");
 					logger.info("EXAMPLE: <print>");
 					logger.info("EXAMPLE: <update 123.txt>");
-					logger.info("EXAMPLE: <123.txt refresh>");
+					logger.info("EXAMPLE: <refresh 123.txt>");
+					logger.info("EXAMPLE: <share>");
 				} else {
 					long startTime = System.currentTimeMillis();
 					if(input.contains(";")) {
@@ -536,8 +601,9 @@ public class Client implements Serializable {
 				logger.info("Shared File Count" + client.sharedFiles.size());
 				logger.info("\nEnter 'exit' to exit the application"
 						+ "\nEnter 'print' to print the files with version and state information"
-						+ "\nEnter file name followed by 'refresh' keyword to re-download the existing file"
+						+ "\nEnter 'refresh' followed by file name to re-download the existing file"
 						+ "\nEnter 'update' followed by file name to update the master file"
+						+ "\nEnter 'share' to share node's public key with others"
 						+ "\nEnter the name of file (with extension) you want to download:\n");
 			}
 		}
@@ -600,4 +666,191 @@ public class Client implements Serializable {
 		}
 		
     }
+	
+	private void generateKeys() {
+		
+		logger.info("Generating RSA keys");
+		/*RSAEncryption rsa = new RSAEncryption(4096);
+		rsa.generateKeys();*/
+		RSA4 rsa = new RSA4(1024);
+		rsaKeyPair = rsa.getRSAKeyPair();
+		writeKeys();
+	}
+	
+	private void writeKeys() {
+		
+		logger.info("Writing RSA keys");
+		String privateKeyFile = getKeysDirectory() + File.separator + this.getId() + ".key";
+		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + ".pub";
+		
+		if(!getKeysDirectory().exists())
+			getKeysDirectory().mkdirs();
+		
+		FileOutputStream privateOut = null, publicOut = null;
+		FileWriter privateFileWriter = null, publicFileWriter = null;
+		try {
+//			logger.info("N: " + rsa.getN());
+//			logger.info("e: " + rsa.getE());
+//			logger.info("d: " + rsa.getD());
+						
+			privateFileWriter = new FileWriter(privateKeyFile);
+			BufferedWriter bufferedWriter = new BufferedWriter(privateFileWriter);
+			bufferedWriter.write(Base64.getEncoder().encodeToString(("" + rsaKeyPair.getPrivate().getModulus()).getBytes()));
+			bufferedWriter.newLine();
+            bufferedWriter.write(Base64.getEncoder().encodeToString(("" + rsaKeyPair.getPrivate().getPrivateExponent()).getBytes()));
+            // Always close files.
+            bufferedWriter.close();
+
+            publicFileWriter = new FileWriter(publicKeyFile);
+			bufferedWriter = new BufferedWriter(publicFileWriter);
+			bufferedWriter.write(Base64.getEncoder().encodeToString(("" + rsaKeyPair.getPublic().getModulus()).getBytes()));
+			bufferedWriter.newLine();
+            bufferedWriter.write(Base64.getEncoder().encodeToString(("" + rsaKeyPair.getPublic().getPublicExponent()).getBytes()));
+            // Always close files.
+            bufferedWriter.close();
+            logger.info("RSA keys generated");
+		} catch (IOException e) {
+			logger.error("[" + this.id + "] " + "Client exception: Unable to write RSA keys.");
+			e.printStackTrace();
+		} finally {
+			try {
+				if (privateOut != null)
+					privateOut.close();
+				if (publicOut != null)
+					publicOut.close();
+			} catch (IOException e) {
+				logger.error("[" + this.id + "] " + "Client exception: Unable to close FileOutputStream.");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private RSAEncryption readKeys(String id) {
+		RSAEncryption rsa = null;
+		String privateKeyFile = getKeysDirectory() + File.separator + this.getId() + ".key";
+		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + ".pub";
+		try {
+			FileReader privateFileReader = new FileReader(Paths.get(privateKeyFile).toFile());
+            BufferedReader bufferedReader = new BufferedReader(privateFileReader);
+
+            String line = null, N = null, D = null;
+            if((line = bufferedReader.readLine()) != null) {
+            	N = line;
+//            	logger.debug("N=> " + line);
+            }
+            if((line = bufferedReader.readLine()) != null) {
+            	D = line;
+//            	logger.debug("D=> " + line);
+            }
+            bufferedReader.close();
+	        
+            FileReader publicFileReader = new FileReader(Paths.get(publicKeyFile).toFile());
+            bufferedReader = new BufferedReader(publicFileReader);
+            line = null;
+            String E = null;
+            if((line = bufferedReader.readLine()) != null) {
+//            	logger.debug("N=> " + line);
+            }
+            if((line = bufferedReader.readLine()) != null) {
+            	E = line;
+//            	logger.debug("E=> " + line);
+            }
+            bufferedReader.close();
+	        
+            String nString = new String(Base64.getDecoder().decode(N)).toString();
+			String dString = new String(Base64.getDecoder().decode(D)).toString();
+			String eString = new String(Base64.getDecoder().decode(E)).toString();
+			/*logger.info("N: " + nString);
+			logger.info("D: " + dString);
+			logger.info("E: " + eString);*/
+			
+			BigInteger n, d, e;
+			n = new BigInteger(nString);
+			d = new BigInteger(dString);
+			e = new BigInteger(eString);
+			/*logger.info("N: " + n);
+			logger.info("d: " + d);
+			logger.info("e: " + e);*/
+			rsa = new RSAEncryption(n, e, d);
+			/*logger.info("Ciphertext: " + cipherText);
+			BigInteger plaintext = rsa.decrypt(cipherText);
+			String text2 = new String(plaintext.toByteArray());
+			logger.info("Plaintext: " + text2);*/	
+		} catch (IOException e1) {
+			logger.error("[" + this.id + "] " + "Client exception: Unable to read RSA keys.");
+			e1.printStackTrace();
+		}
+		return rsa;
+	}
+	
+	private RSAEncryption readPrivateKey(String id) {
+		
+		RSAEncryption rsa = null;
+		String privateKeyFile = getKeysDirectory() + File.separator + id + ".key";
+		
+		try {
+			FileReader privateFileReader = new FileReader(Paths.get(privateKeyFile).toFile());
+            BufferedReader bufferedReader = new BufferedReader(privateFileReader);
+
+            String line = null, N = null, D = null;
+            if((line = bufferedReader.readLine()) != null) {
+            	N = line;
+            	logger.debug("N=> " + line);
+            }
+            if((line = bufferedReader.readLine()) != null) {
+            	D = line;
+            	logger.debug("D=> " + line);
+            }
+            bufferedReader.close();
+	        
+            String nString = new String(Base64.getDecoder().decode(N)).toString();
+			String dString = new String(Base64.getDecoder().decode(D)).toString();
+			
+			BigInteger n = new BigInteger(nString);
+			BigInteger d = new BigInteger(dString);
+			
+			rsa = new RSAEncryption(n, null, d);
+			
+		} catch (IOException e1) {
+			logger.error("[" + this.id + "] " + "Client exception: Unable to read RSA private key.");
+			e1.printStackTrace();
+		}
+		return rsa;
+	}
+	
+	private RSAEncryption readPublicKeys(String id) {
+		
+		RSAEncryption rsa = null;
+		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + ".pub";
+		
+		try {
+            FileReader publicFileReader = new FileReader(Paths.get(publicKeyFile).toFile());
+            BufferedReader bufferedReader = new BufferedReader(publicFileReader);
+            
+            String line = null, N = null, E = null;
+            if((line = bufferedReader.readLine()) != null) {
+            	N = line;
+            	logger.debug("N=> " + line);
+            }
+            if((line = bufferedReader.readLine()) != null) {
+            	E = line;
+            	logger.debug("E=> " + line);
+            }
+            bufferedReader.close();
+	        
+            String nString = new String(Base64.getDecoder().decode(N)).toString();
+			String eString = new String(Base64.getDecoder().decode(E)).toString();
+			
+			BigInteger n = new BigInteger(nString);
+			BigInteger e = new BigInteger(eString);
+
+			rsa = new RSAEncryption(n, e, null);
+			
+		} catch (IOException e1) {
+			logger.error("[" + this.id + "] " + "Client exception: Unable to read RSA public key.");
+			e1.printStackTrace();
+		}
+		return rsa;
+	}
+	
 }
