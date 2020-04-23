@@ -61,7 +61,7 @@ class XorOutputStream extends FilterOutputStream {
 	 */
 	public void write(int b) throws IOException {
 //		System.out.println("before write:" + b);
-		System.out.println("before write:" + ((b ^ pattern) & 0xFF));
-//		out.write((b ^ pattern) & 0xFF);
+//		System.out.println("before write:" + ((b ^ pattern) & 0xFF));
+		out.write((b ^ pattern) & 0xFF);
 	}
 }

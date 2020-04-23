@@ -36,8 +36,8 @@ import client.Client;
 import model.FileConsistencyState;
 import model.MessageID;
 import model.P2PFile;
-import rmi.RMISecurityClientSocketFactory;
-import rmi.RMISecurityServerSocketFactory;
+import rmi.XorClientSocketFactory;
+import rmi.XorServerSocketFactory;
 import security.RSAEncryption;
 import security.RSAKeyPair;
 import security.RSAPrivateKey;
@@ -389,11 +389,14 @@ public class Server implements IRemote, Serializable {
 			
 			// Initialize the RMI Registry
 //			IRemote stub = (IRemote) UnicastRemoteObject.exportObject(this, 0);
-			RMIClientSocketFactory csf = new RMISecurityClientSocketFactory(rsaPublicKey, rsaPrivateKey);
-		    RMIServerSocketFactory ssf = new RMISecurityServerSocketFactory(rsaPublicKey, rsaPrivateKey);
+			/*RMIClientSocketFactory csf = new RMISecurityClientSocketFactory(rsaPublicKey, rsaPrivateKey);
+		    RMIServerSocketFactory ssf = new RMISecurityServerSocketFactory(rsaPublicKey, rsaPrivateKey);*/
 			
-			/*RMIClientSocketFactory csf = new XorClientSocketFactory(pattern);
-		    RMIServerSocketFactory ssf = new XorServerSocketFactory(pattern);*/
+			/*RMIClientSocketFactory csf = new RMIXorClientSocketFactory(rsaPublicKey, rsaPrivateKey);
+		    RMIServerSocketFactory ssf = new RMIXorServerSocketFactory(rsaPublicKey, rsaPrivateKey);*/
+		    
+			RMIClientSocketFactory csf = new XorClientSocketFactory(pattern);
+		    RMIServerSocketFactory ssf = new XorServerSocketFactory(pattern);
 			
 			
 		    //LocateRegistry.createRegistry(1099, csf, ssf);
