@@ -51,7 +51,7 @@ class RMIXorInputStream extends FilterInputStream {
 	/*
 	 * The byte being used to "decrypt" each byte of data.
 	 */
-	private RSAPublicKey rsaPublicKey;
+//	private RSAPublicKey rsaPublicKey;
 	private RSAPrivateKey rsaPrivateKey;
 	private RSA4 rsa;
 
@@ -59,10 +59,10 @@ class RMIXorInputStream extends FilterInputStream {
 	 * Constructs an input stream that uses the specified pattern to "decrypt" each
 	 * byte of data.
 	 */
-	public RMIXorInputStream(InputStream in, RSAPublicKey publicKey, RSAPrivateKey privateKey) {
+	public RMIXorInputStream(InputStream in, /*RSAPublicKey publicKey, */RSAPrivateKey privateKey) {
 		super(in);
-		this.rsaPublicKey = publicKey;
-		rsa = new RSA4(this.rsaPublicKey.getModulus(), this.rsaPublicKey.getPublicExponent(), null);
+		this.rsaPrivateKey = privateKey;
+		rsa = new RSA4(this.rsaPrivateKey.getModulus(), null, this.rsaPrivateKey.getPrivateExponent());
 	}
 
 	/*

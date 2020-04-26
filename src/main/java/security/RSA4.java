@@ -57,13 +57,23 @@ public class RSA4 {
 	}
 	
 	public byte[] encryptToBytes(byte[] message) {
-		BigInteger localBigInteger2 = new BigInteger(1, message).modPow(publicKey, modulus);
-		return toByteArray(localBigInteger2, getByteLength());
+		BigInteger bigInteger = new BigInteger(1, message).modPow(publicKey, modulus);
+		return toByteArray(bigInteger, getByteLength());
+	}
+	
+	public byte[] encryptToBytesWithPrivateKey(byte[] message) {
+		BigInteger bigInteger = new BigInteger(1, message).modPow(privateKey, modulus);
+		return toByteArray(bigInteger, getByteLength());
 	}
 
 	public byte[] decryptToBytes(byte[] encrypted) {
-		BigInteger localBigInteger2 = new BigInteger(1, encrypted).modPow(privateKey, modulus);
-		return toByteArray(localBigInteger2, getByteLength());
+		BigInteger bigInteger = new BigInteger(1, encrypted).modPow(privateKey, modulus);
+		return toByteArray(bigInteger, getByteLength());
+	}
+	
+	public byte[] decryptToBytesWithPublicKey(byte[] encrypted) {
+		BigInteger bigInteger = new BigInteger(1, encrypted).modPow(publicKey, modulus);
+		return toByteArray(bigInteger, getByteLength());
 	}
 
 	public String toString() {
@@ -172,6 +182,41 @@ public class RSA4 {
         return encryptedMessage;
     }
 	
+	public byte[] encryptDataWithPrivateKey(byte[] plainMessage) {
+    	int keySize = getByteLength();
+		int maxBlockSize = (keySize - 11);
+		int blocksCount = (int) Math.ceil((double) plainMessage.length / maxBlockSize);
+		byte[][] blocksCollection = new byte[blocksCount][];
+		
+		byte[] encrypted = null;
+        int i = 0;
+        int startIndex;
+        int endIndex;
+        int sizeOfBlocks = 0;
+        while (i < blocksCount) {
+            startIndex = i * (maxBlockSize);
+            endIndex = startIndex + maxBlockSize;
+            try {
+                byte[] message = Arrays.copyOfRange(plainMessage, startIndex, Math.min(plainMessage.length,endIndex));
+                byte[] paddedMessage = pad(message, keySize);
+				encrypted = encryptToBytesWithPrivateKey(paddedMessage);
+                sizeOfBlocks += encrypted.length;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            blocksCollection[i] = encrypted;
+            i++;
+        }
+        i = 0;
+        int n = blocksCollection.length;
+        byte[] encryptedMessage = new byte[0];
+        while (i < n) {
+        	encryptedMessage = concatenateByteArrays(encryptedMessage, blocksCollection[i]);
+            i++;
+        }
+        return encryptedMessage;
+    }
+	
 	public byte[] decryptData(byte[] encryptedMessage) throws Exception {
 		int keySize = getByteLength();
 		int maxBlockSize = (keySize - 11);
@@ -186,6 +231,28 @@ public class RSA4 {
             endIndex = startIndex + keySize;
             byteChunkData = Arrays.copyOfRange(encryptedMessage, startIndex, endIndex);
             decryptedChunk = decryptToBytes(byteChunkData);
+            byte[] unpaddedDecryptedChunk = unpad(decryptedChunk, maxBlockSize); 
+            decryptedMessage = concatenateByteArrays(decryptedMessage, unpaddedDecryptedChunk);
+            i++;
+        }
+        System.out.println("Decrypted message:" + Arrays.toString(decryptedMessage));
+        return decryptedMessage;
+	}
+	
+	public byte[] decryptDataWithPublicKey(byte[] encryptedMessage) throws Exception {
+		int keySize = getByteLength();
+		int maxBlockSize = (keySize - 11);
+        int blocksCount = encryptedMessage.length / keySize;
+        
+        int i = 0, startIndex=0, endIndex=0;
+        byte[] byteChunkData, decryptedChunk;
+        byte[] decryptedMessage = new byte[0];
+        
+        while (i < blocksCount) {
+            startIndex = i * (keySize);
+            endIndex = startIndex + keySize;
+            byteChunkData = Arrays.copyOfRange(encryptedMessage, startIndex, endIndex);
+            decryptedChunk = decryptToBytesWithPublicKey(byteChunkData);
             byte[] unpaddedDecryptedChunk = unpad(decryptedChunk, maxBlockSize); 
             decryptedMessage = concatenateByteArrays(decryptedMessage, unpaddedDecryptedChunk);
             i++;

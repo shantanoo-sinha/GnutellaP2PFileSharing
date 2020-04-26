@@ -82,7 +82,7 @@ public class Test {
         System.out.println("Decrypted message:" + decryptedMessageID.getSequenceNumber());
         System.out.println("Decrypted message:" + decryptedMessageID);*/
         
-		P2PFile p2pFile = new P2PFile(95, 550, "rmi://localhost:2002/PeerServer", "rmi://localhost:2001/PeerServer", "rmi://localhost:2003/PeerServer", null, new File("C:\\\\SHantanoo\\\\959.txt"), "959.txt", FileConsistencyState.EXPIRED);
+		P2PFile p2pFile = new P2PFile(95, 550, "Client2", "rmi://localhost:2002/PeerServer", "rmi://localhost:2001/PeerServer", "rmi://localhost:2003/PeerServer", null, new File("C:\\\\SHantanoo\\\\959.txt"), "959.txt", FileConsistencyState.EXPIRED);
         System.out.println("Plaintext message:" + p2pFile.getVersion());
         System.out.println("Plaintext message:" + p2pFile.getTTR());
         System.out.println("Plaintext message:" + p2pFile.getOriginServerID());

@@ -112,4 +112,9 @@ public class MessageID implements Serializable {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "MessageID [leafNodeId=" + leafNodeId + ", sequenceNumber=" + sequenceNumber + "]";
+	}
 }

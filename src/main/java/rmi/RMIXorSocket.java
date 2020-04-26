@@ -84,7 +84,7 @@ class RMIXorSocket extends Socket {
 	 */
 	public synchronized InputStream getInputStream() throws IOException {
 		if (in == null) {
-			in = new RMIXorInputStream(super.getInputStream(), rsaPublicKey, rsaPrivateKey);
+			in = new RMIXorInputStream(super.getInputStream(), /*rsaPublicKey, */rsaPrivateKey);
 		}
 		return in;
 	}
@@ -94,7 +94,7 @@ class RMIXorSocket extends Socket {
 	 */
 	public synchronized OutputStream getOutputStream() throws IOException {
 		if (out == null) {
-			out = new RMIXorOutputStream(super.getOutputStream(), rsaPublicKey, rsaPrivateKey);
+			out = new RMIXorOutputStream(super.getOutputStream(), rsaPublicKey/*, rsaPrivateKey*/);
 		}
 		return out;
 	}

@@ -3,15 +3,20 @@
  */
 package security;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
 /**
  * @author Shantanoo
  *
  */
-public class RSAPrivateKey {
+public class RSAPrivateKey implements Serializable {
 
-    private BigInteger modulus;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7003287257884027407L;
+	private BigInteger modulus;
     private BigInteger privateExponent;
 
     /**

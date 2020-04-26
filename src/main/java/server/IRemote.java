@@ -70,7 +70,8 @@ public interface IRemote extends Remote {
 	 * @param upstreamIPAddress the upstream IP address
 	 * @throws RemoteException the remote exception
 	 */
-	public void query(MessageID messageID, long TTL, String fileName, String upstreamIPAddress) throws RemoteException;
+//	public void query(MessageID messageID, long TTL, String fileName, String upstreamIPAddress) throws RemoteException;
+	public void query(byte[] bytes) throws RemoteException;
 	
 	/**
 	 * Queryhit.
@@ -81,7 +82,8 @@ public interface IRemote extends Remote {
 	 * @param leafNodeIP the leaf node IP
 	 * @throws RemoteException the remote exception
 	 */
-	public void queryHit(MessageID messageID, long TTL, String fileName, String leafNodeIP) throws RemoteException;
+//	public void queryHit(MessageID messageID, long TTL, String fileName, String leafNodeIP) throws RemoteException;
+	public void queryHit(byte[] bytes) throws RemoteException;
 
 	/**
 	 * Obtain.
@@ -92,7 +94,8 @@ public interface IRemote extends Remote {
 	 * @throws RemoteException the remote exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public P2PFile obtain(String fileName, String leafNodeIP) throws RemoteException, IOException;
+//	public P2PFile obtain(String fileName, String leafNodeIP) throws RemoteException, IOException;
+	public byte[] obtain(byte[] bytes) throws RemoteException, IOException;
 	
 	/**
 	 * Check upstream map.

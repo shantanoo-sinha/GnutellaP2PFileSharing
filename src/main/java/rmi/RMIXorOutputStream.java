@@ -52,7 +52,7 @@ class RMIXorOutputStream extends FilterOutputStream {
 	 * The byte used to "encrypt" each byte of data.
 	 */
 	private RSAPublicKey rsaPublicKey;
-	private RSAPrivateKey rsaPrivateKey;
+//	private RSAPrivateKey rsaPrivateKey;
 	private byte[] ibuffer = new byte[1];
 	private RSA4 rsa;
 
@@ -64,7 +64,7 @@ class RMIXorOutputStream extends FilterOutputStream {
 		super(out);
 		this.pattern = pattern;
 	}*/
-	public RMIXorOutputStream(OutputStream out, RSAPublicKey publicKey, RSAPrivateKey privateKey) {
+	public RMIXorOutputStream(OutputStream out, RSAPublicKey publicKey/*, RSAPrivateKey privateKey*/) {
 		super(out);
 		this.rsaPublicKey = publicKey;
 		rsa = new RSA4(this.rsaPublicKey.getModulus(), this.rsaPublicKey.getPublicExponent(), null);

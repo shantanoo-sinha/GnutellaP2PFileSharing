@@ -76,4 +76,7 @@ public class Constants {
 	
 	public static final String KEYS_FOLDER = "keys";
 	public static final String SHARED_KEYS_FOLDER = "shared";
+	
+	public static final String PRIVATE_KEY_SUFFIX = ".key";
+	public static final String PUBLIC_KEY_SUFFIX = ".pub";
 }

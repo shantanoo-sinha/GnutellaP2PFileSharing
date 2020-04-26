@@ -3,14 +3,19 @@
  */
 package security;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
 /**
  * @author Shantanoo
  *
  */
-public class RSAPublicKey {
+public class RSAPublicKey implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6148909906950498276L;
 	private BigInteger modulus;
     private BigInteger publicExponent;
 

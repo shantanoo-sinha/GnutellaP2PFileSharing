@@ -33,6 +33,8 @@ import model.P2PFile;
 import security.RSA4;
 import security.RSAEncryption;
 import security.RSAKeyPair;
+import security.RSAPrivateKey;
+import security.RSAPublicKey;
 import server.Server;
 import util.Constants;
 import util.DirectoryWatcher;
@@ -86,6 +88,7 @@ public class Client implements Serializable {
 	private RSAKeyPair rsaKeyPair;
 	private File keysDirectory;
 	private File sharedKeysDirectory;
+	RSA4 rsa;
 	
 	public String text = "Yellow and Black Border Collies";
 	public BigInteger cipherText;
@@ -98,19 +101,23 @@ public class Client implements Serializable {
 	public Client(String id, String peerNetworkTopology) {
 		super();
 		this.id = id;
+		
+		this.keysDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
+				+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.KEYS_FOLDER);
+		this.sharedKeysDirectory = new File(this.keysDirectory + File.separator + Constants.SHARED_KEYS_FOLDER);
+		
+		generateKeys();
+		
 		initServer(this, id, peerNetworkTopology, TTR);
+		
 		if (!server.isSuperPeer()) {
 			this.masterFilesDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
 					+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.FILES_FOLDER + File.separator + Constants.MASTER_FOLDER);
 			this.sharedFilesDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
 					+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.FILES_FOLDER + File.separator + Constants.SHARED_FOLDER);
 		}
-		this.keysDirectory = new File(new File(new File(USER_DIR.getParent()).getParent()) + File.separator
-				+ Constants.CLIENTS_FOLDER + File.separator + id + File.separator + Constants.KEYS_FOLDER);
-		this.sharedKeysDirectory = new File(this.keysDirectory + File.separator + Constants.SHARED_KEYS_FOLDER);
+		
 		registerFiles();
-		generateKeys();
-		//initServer(this, id, peerNetworkTopology, TTR);
 		//readKeys(id);
 	}
 
@@ -124,7 +131,7 @@ public class Client implements Serializable {
 	 */
 	private void initServer(Client client, String id, String peerNetworkTopology, long TTR) {
 		try {
-			server = new Server(client, id, peerNetworkTopology, TTR, rsaKeyPair);
+			server = new Server(client, id, peerNetworkTopology, TTR, rsaKeyPair, rsa);
 		} catch (Exception e) {
 			logger.error("Exception: Unable to initiate Server for client " + id + ":\n" + e.toString());
 			e.printStackTrace();
@@ -318,7 +325,7 @@ public class Client implements Serializable {
 			if(filesArr[i].isDirectory())
 				continue;
 			logger.info("[" + this.id + "] " + filesArr[i].getName());
-			addToMasterFiles(filesArr[i].getName(), new P2PFile(1, 100, this.server.getIpAddress(), this.server.getSuperPeer(), this.server.getIpAddress(), null, filesArr[i], filesArr[i].getName(), FileConsistencyState.VALID));
+			addToMasterFiles(filesArr[i].getName(), new P2PFile(1, 100, this.server.getId(), this.server.getIpAddress(), this.server.getSuperPeer(), this.server.getIpAddress(), null, filesArr[i], filesArr[i].getName(), FileConsistencyState.VALID));
 		}
 		new Thread(new DirectoryWatcher(this)).start();
 		logger.info("[" + this.id + "] " + this.id + " Master Files Count:" + masterFiles.size());
@@ -669,10 +676,15 @@ public class Client implements Serializable {
 	
 	private void generateKeys() {
 		
+		if(this.keysDirectory.exists()) {
+			rsaKeyPair = new RSAKeyPair(readPrivateKey(this.id), readPublicKey(this.id));
+			rsa = new RSA4(rsaKeyPair.getPublic().getModulus(), rsaKeyPair.getPublic().getPublicExponent(), rsaKeyPair.getPrivate().getPrivateExponent());
+			return;
+		}
 		logger.info("Generating RSA keys");
 		/*RSAEncryption rsa = new RSAEncryption(4096);
 		rsa.generateKeys();*/
-		RSA4 rsa = new RSA4(1024);
+		rsa = new RSA4(1024);
 		rsaKeyPair = rsa.getRSAKeyPair();
 		writeKeys();
 	}
@@ -680,8 +692,9 @@ public class Client implements Serializable {
 	private void writeKeys() {
 		
 		logger.info("Writing RSA keys");
-		String privateKeyFile = getKeysDirectory() + File.separator + this.getId() + ".key";
-		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + ".pub";
+		
+		String privateKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PRIVATE_KEY_SUFFIX;
+		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PUBLIC_KEY_SUFFIX;
 		
 		if(!getKeysDirectory().exists())
 			getKeysDirectory().mkdirs();
@@ -727,8 +740,8 @@ public class Client implements Serializable {
 	
 	private RSAEncryption readKeys(String id) {
 		RSAEncryption rsa = null;
-		String privateKeyFile = getKeysDirectory() + File.separator + this.getId() + ".key";
-		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + ".pub";
+		String privateKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PRIVATE_KEY_SUFFIX;
+		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PUBLIC_KEY_SUFFIX;
 		try {
 			FileReader privateFileReader = new FileReader(Paths.get(privateKeyFile).toFile());
             BufferedReader bufferedReader = new BufferedReader(privateFileReader);
@@ -783,10 +796,10 @@ public class Client implements Serializable {
 		return rsa;
 	}
 	
-	private RSAEncryption readPrivateKey(String id) {
-		
-		RSAEncryption rsa = null;
-		String privateKeyFile = getKeysDirectory() + File.separator + id + ".key";
+	private RSAPrivateKey readPrivateKey(String id) {
+		logger.info("[" + this.id + "] Reading private key.");
+		RSAPrivateKey rsaPrivateKey = null;
+		String privateKeyFile = getKeysDirectory() + File.separator + id + Constants.PRIVATE_KEY_SUFFIX;
 		
 		try {
 			FileReader privateFileReader = new FileReader(Paths.get(privateKeyFile).toFile());
@@ -809,19 +822,19 @@ public class Client implements Serializable {
 			BigInteger n = new BigInteger(nString);
 			BigInteger d = new BigInteger(dString);
 			
-			rsa = new RSAEncryption(n, null, d);
+			rsaPrivateKey = new RSAPrivateKey(n, d);
 			
 		} catch (IOException e1) {
 			logger.error("[" + this.id + "] " + "Client exception: Unable to read RSA private key.");
 			e1.printStackTrace();
 		}
-		return rsa;
+		return rsaPrivateKey;
 	}
 	
-	private RSAEncryption readPublicKeys(String id) {
-		
-		RSAEncryption rsa = null;
-		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + ".pub";
+	private RSAPublicKey readPublicKey(String id) {
+		logger.info("[" + this.id + "] Reading public key.");
+		RSAPublicKey rsaPublicKey = null;
+		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PUBLIC_KEY_SUFFIX;
 		
 		try {
             FileReader publicFileReader = new FileReader(Paths.get(publicKeyFile).toFile());
@@ -844,13 +857,13 @@ public class Client implements Serializable {
 			BigInteger n = new BigInteger(nString);
 			BigInteger e = new BigInteger(eString);
 
-			rsa = new RSAEncryption(n, e, null);
+			rsaPublicKey = new RSAPublicKey(n, e);
 			
 		} catch (IOException e1) {
 			logger.error("[" + this.id + "] " + "Client exception: Unable to read RSA public key.");
 			e1.printStackTrace();
 		}
-		return rsa;
+		return rsaPublicKey;
 	}
 	
 }

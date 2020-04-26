@@ -3,12 +3,19 @@
  */
 package security;
 
+import java.io.Serializable;
+
 /**
  * @author Shantanoo
  *
  */
-public class RSAKeyPair {
+public class RSAKeyPair implements Serializable {
 	
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8484275969755245333L;
 	private final RSAPrivateKey privateKey;
 	private final RSAPublicKey publicKey;
 	
