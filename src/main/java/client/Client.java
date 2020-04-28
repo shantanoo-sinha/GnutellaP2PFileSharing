@@ -2,6 +2,7 @@ package client;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -9,14 +10,17 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -27,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import model.CustomObject;
 import model.FileConsistencyState;
 import model.MessageID;
 import model.P2PFile;
@@ -503,7 +508,7 @@ public class Client implements Serializable {
 					scanner.close();
 					System.exit(0);
 				} else if (input.equalsIgnoreCase("share")) {
-					client.server.sharePublicKey();
+					client.server.sharePublicKeyToAll();
 				} else if (input.equalsIgnoreCase("print")) {
 					logger.info("[" + id + "] " + "Printing file information:");
 
@@ -549,7 +554,7 @@ public class Client implements Serializable {
 					scanner.close();
 					System.exit(0);
 				} else if (input.equalsIgnoreCase("share")) {
-					client.server.sharePublicKey();
+					client.server.sharePublicKeyToAll();
 				} else if (input.startsWith("refresh")) {
 					long startTime = System.currentTimeMillis();
 					client.refreshFile(input.substring("refresh".length()).trim());
@@ -620,8 +625,9 @@ public class Client implements Serializable {
 	 * Modify master file.
 	 *
 	 * @param fileName the file name
+	 * @throws IOException 
 	 */
-	public void modifyMasterFile(String fileName) {
+	public void modifyMasterFile(String fileName) throws IOException {
 		P2PFile p2pFile = this.masterFiles.get(fileName);
 		p2pFile.incrementVersion();
 		try {
@@ -631,7 +637,17 @@ public class Client implements Serializable {
 				String leafNodeId = Constants.RMI_LOCALHOST + server.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
 				MessageID messageID = new MessageID(leafNodeId, sequenceNumber++);
 				
-				server.invalidate(messageID, p2pFile, this.server.getIpAddress());
+//				server.invalidate(messageID, p2pFile, this.server.getIpAddress());
+				List<Object> parameters = new ArrayList<>();
+				parameters.add(messageID);
+				parameters.add(p2pFile);
+				parameters.add(this.id);
+				CustomObject obj = new CustomObject("invalidate", parameters, null);
+				ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+		        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
+		        objOutputStream.writeObject(obj);
+		        byte[] encryptedData = rsa.encryptData(byteOutputStream.toByteArray());
+		        server.invalidate(encryptedData);
 			}
 		} catch (RemoteException e) {
 			logger.error("[" + id + "] " + "Client exception: Unable to modify master file.");

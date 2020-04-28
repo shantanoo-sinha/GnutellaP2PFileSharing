@@ -42,7 +42,8 @@ public interface IRemote extends Remote {
 	 * @param files the files
 	 * @throws RemoteException the remote exception
 	 */
-	public void registerMasterFilesToSuperPeer(String leafNodeAddress, Map</*File*/String, P2PFile> files) throws RemoteException;
+//	public void registerMasterFilesToSuperPeer(String leafNodeAddress, Map<String, P2PFile> files) throws RemoteException;
+	public void registerMasterFilesToSuperPeer(byte[] bytes) throws RemoteException;
 	
 	/**
 	 * Register shared files to super peer.
@@ -51,7 +52,8 @@ public interface IRemote extends Remote {
 	 * @param files the files
 	 * @throws RemoteException the remote exception
 	 */
-	public void registerSharedFilesToSuperPeer(String leafNodeAddress, Map</*File*/String, P2PFile> files) throws RemoteException;
+//	public void registerSharedFilesToSuperPeer(String leafNodeAddress, Map<String, P2PFile> files) throws RemoteException;
+	public void registerSharedFilesToSuperPeer(byte[] bytes) throws RemoteException;
 	
 	/**
 	 * Update shared files to super peer.
@@ -60,7 +62,8 @@ public interface IRemote extends Remote {
 	 * @param files the files
 	 * @throws RemoteException the remote exception
 	 */
-	public void updateSharedFilesToSuperPeer(String leafNodeAddress, Map</*File*/String, P2PFile> files) throws RemoteException;
+	public void updateSharedFilesToSuperPeer(String leafNodeAddress, Map<String, P2PFile> files) throws RemoteException;
+	public void updateSharedFilesToSuperPeer(byte[] bytes) throws RemoteException;
 	/**
 	 * Query.
 	 *
@@ -114,7 +117,8 @@ public interface IRemote extends Remote {
 	 * @param upstreamIP the upstream IP
 	 * @throws RemoteException the remote exception
 	 */
-	public void invalidate(MessageID messageID, P2PFile p2pFile, String upstreamIP) throws RemoteException;
+//	public void invalidate(MessageID messageID, P2PFile p2pFile, String upstreamIP) throws RemoteException;
+	public void invalidate(byte[] bytes) throws RemoteException;
 	
 	/**
 	 * Invalidate.
@@ -143,4 +147,6 @@ public interface IRemote extends Remote {
 	public List<P2PFile> poll(List<P2PFile> p2pFiles) throws RemoteException;
 	
 	public boolean sharePublicKey(byte[] publicKey, String clientName) throws RemoteException;
+
+	public byte[] sharePublicKeyAndGetPublicKey(byte[] publicKey, String id) throws RemoteException;
 }

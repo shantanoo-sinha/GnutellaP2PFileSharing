@@ -66,11 +66,11 @@ public class FileDownloader extends Thread {
 			List<Object> parameters = new ArrayList<>();
 			parameters.add(fileName);
 			parameters.add(server.getIpAddress());
-			CustomObject obj1 = new CustomObject("obtain", parameters, null);
+			CustomObject obj = new CustomObject("obtain", parameters, null);
 			
 			ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
 	        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
-	        objOutputStream.writeObject(obj1);
+	        objOutputStream.writeObject(obj);
 	        
 	        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(remoteID, server.getSharedKeysDirectory());
 			RSA4 rsa = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);

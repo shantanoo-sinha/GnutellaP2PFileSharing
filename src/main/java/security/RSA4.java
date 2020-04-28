@@ -4,7 +4,15 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import server.Server;
+
 public class RSA4 {
+	
+	private static final Logger logger = LogManager.getLogger(Server.class);
+	
 	private final static BigInteger one = new BigInteger("1");
 	private final static SecureRandom random = new SecureRandom();
 
@@ -87,7 +95,7 @@ public class RSA4 {
 	public static void main(String[] args) {
 		int N = 1024;
 		RSA4 key = new RSA4(N);
-		System.out.println(key);
+		logger.info(key);
 
 		// create random message, encrypt and decrypt
 		BigInteger message = new BigInteger(N - 50, random);
@@ -99,16 +107,16 @@ public class RSA4 {
 
 		BigInteger encrypt = key.encrypt(message);
 		BigInteger decrypt = key.decrypt(encrypt);
-		System.out.println("message   = " + message);
-		System.out.println("encrypted = " + encrypt);
-		System.out.println("decrypted = " + decrypt);
+		logger.info("message   = " + message);
+		logger.info("encrypted = " + encrypt);
+		logger.info("decrypted = " + decrypt);
 
-		System.out.println("***********************");
+		logger.info("***********************");
 		BigInteger encrypt1 = key.encrypt(message.toByteArray());
 		BigInteger decrypt1 = key.decrypt(encrypt1.toByteArray());
-		System.out.println("message   = " + message);
-		System.out.println("encrypted = " + encrypt1);
-		System.out.println("decrypted = " + decrypt1);
+		logger.info("message   = " + message);
+		logger.info("encrypted = " + encrypt1);
+		logger.info("decrypted = " + decrypt1);
 	}
 	
 	public int getByteLength() {
@@ -235,7 +243,7 @@ public class RSA4 {
             decryptedMessage = concatenateByteArrays(decryptedMessage, unpaddedDecryptedChunk);
             i++;
         }
-        System.out.println("Decrypted message:" + Arrays.toString(decryptedMessage));
+        logger.info("Decrypted message:" + Arrays.toString(decryptedMessage));
         return decryptedMessage;
 	}
 	
@@ -257,7 +265,7 @@ public class RSA4 {
             decryptedMessage = concatenateByteArrays(decryptedMessage, unpaddedDecryptedChunk);
             i++;
         }
-        System.out.println("Decrypted message:" + Arrays.toString(decryptedMessage));
+        logger.info("Decrypted message:" + Arrays.toString(decryptedMessage));
         return decryptedMessage;
 	}
 	

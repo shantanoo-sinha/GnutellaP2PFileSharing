@@ -148,9 +148,9 @@ public class RSAKeysHelper {
 		return rsaPublicKey;
 	}
 	
-	public static byte[] readPublicKeyFile(int id, String keysDir) {
+	public static byte[] readPublicKeyFile(String id, String keysDir) {
 		
-		String publicKeyFile = keysDir + File.separator + Constants.CLIENT_PREFIX + id + Constants.PUBLIC_KEY_SUFFIX;
+		String publicKeyFile = keysDir + File.separator + id + Constants.PUBLIC_KEY_SUFFIX;
 		byte[] publicKey = null;
 		try {
 			publicKey = Files.readAllBytes(Paths.get(publicKeyFile));
