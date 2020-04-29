@@ -44,17 +44,28 @@ import java.io.InputStream;
 
 import security.RSAEncryption;
 import security.RSAPrivateKey;
-import security.RSAPublicKey;
 
+/**
+ * The Class RMIXorInputStream.
+ */
 class RMIXorInputStream extends FilterInputStream {
 
 	/*
 	 * The byte being used to "decrypt" each byte of data.
 	 */
-//	private RSAPublicKey rsaPublicKey;
+/** The rsa private key. */
+	//	private RSAPublicKey rsaPublicKey;
 	private RSAPrivateKey rsaPrivateKey;
+	
+	/** The rsa. */
 	private RSAEncryption rsa;
 
+	/**
+	 * Instantiates a new RMI xor input stream.
+	 *
+	 * @param in the in
+	 * @param privateKey the private key
+	 */
 	/*
 	 * Constructs an input stream that uses the specified pattern to "decrypt" each
 	 * byte of data.
@@ -95,6 +106,9 @@ class RMIXorInputStream extends FilterInputStream {
 		return numBytes;
 	}*/
 	
+	/* (non-Javadoc)
+	 * @see java.io.FilterInputStream#read()
+	 */
 	public int read() throws IOException {
 		int b = in.read();
 		// If not end of file or an error, truncate b to one byte
@@ -112,6 +126,9 @@ class RMIXorInputStream extends FilterInputStream {
 		return b;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.io.FilterInputStream#read(byte[], int, int)
+	 */
 	/*
 	 * Reads up to len bytes and decrypt the byte with the private key.
 	 * Returns the byte.

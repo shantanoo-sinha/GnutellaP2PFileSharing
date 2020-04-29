@@ -22,13 +22,22 @@ import util.Constants;
 
 
 /**
- * @author Shantanoo
+ * The Class RSAKeysHelper.
  *
+ * @author Shantanoo
  */
 public class RSAKeysHelper {
 
+	/** The Constant logger. */
 	private static final Logger logger = LogManager.getLogger(RSAKeysHelper.class);
 	
+	/**
+	 * Read private key.
+	 *
+	 * @param id the id
+	 * @param keysDir the keys dir
+	 * @return the RSA private key
+	 */
 	public static RSAPrivateKey readPrivateKey(int id, String keysDir) {
 		logger.info("Reading private key.");
 		RSAPrivateKey rsaPrivateKey = null;
@@ -64,6 +73,13 @@ public class RSAKeysHelper {
 		return rsaPrivateKey;
 	}
 	
+	/**
+	 * Write keys.
+	 *
+	 * @param id the id
+	 * @param keysDir the keys dir
+	 * @param rsaKeyPair the rsa key pair
+	 */
 	public static void writeKeys(int id, String keysDir, RSAKeyPair rsaKeyPair) {
 
 		logger.info("Writing RSA keys");
@@ -113,6 +129,13 @@ public class RSAKeysHelper {
 		}
 	}
 	
+	/**
+	 * Read public key.
+	 *
+	 * @param id the id
+	 * @param keysDir the keys dir
+	 * @return the RSA public key
+	 */
 	public static RSAPublicKey readPublicKey(String id, File keysDir) {
 		logger.info("Reading public key.");
 		RSAPublicKey rsaPublicKey = null;
@@ -148,6 +171,13 @@ public class RSAKeysHelper {
 		return rsaPublicKey;
 	}
 	
+	/**
+	 * Read public key file.
+	 *
+	 * @param id the id
+	 * @param keysDir the keys dir
+	 * @return the byte[]
+	 */
 	public static byte[] readPublicKeyFile(String id, String keysDir) {
 		
 		String publicKeyFile = keysDir + File.separator + id + Constants.PUBLIC_KEY_SUFFIX;

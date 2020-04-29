@@ -6,21 +6,26 @@ package security;
 import java.io.Serializable;
 
 /**
- * @author Shantanoo
+ * The Class RSAKeyPair.
  *
+ * @author Shantanoo
  */
 public class RSAKeyPair implements Serializable {
 	
-	/**
-	 * 
-	 */
+	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -8484275969755245333L;
+	
+	/** The private key. */
 	private final RSAPrivateKey privateKey;
+	
+	/** The public key. */
 	private final RSAPublicKey publicKey;
 	
 	/**
-	 * @param privateKey
-	 * @param publicKey
+	 * Instantiates a new RSA key pair.
+	 *
+	 * @param privateKey the private key
+	 * @param publicKey the public key
 	 */
 	public RSAKeyPair(RSAPrivateKey privateKey, RSAPublicKey publicKey) {
 		super();
@@ -28,10 +33,20 @@ public class RSAKeyPair implements Serializable {
 		this.publicKey = publicKey;
 	}
 
+	/**
+	 * Gets the private.
+	 *
+	 * @return the private
+	 */
 	public RSAPrivateKey getPrivate() {
 		return privateKey;
 	}
 
+	/**
+	 * Gets the public.
+	 *
+	 * @return the public
+	 */
 	public RSAPublicKey getPublic() {
 		return publicKey;
 	}

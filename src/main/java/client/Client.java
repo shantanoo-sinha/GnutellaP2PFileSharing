@@ -89,12 +89,22 @@ public class Client implements Serializable {
 	/** The shared files. */
 	private Map<String, P2PFile> sharedFiles = new ConcurrentHashMap<String, P2PFile>();
 
+	/** The rsa key pair. */
 	private RSAKeyPair rsaKeyPair;
+	
+	/** The keys directory. */
 	private File keysDirectory;
+	
+	/** The shared keys directory. */
 	private File sharedKeysDirectory;
+	
+	/** The rsa. */
 	RSAEncryption rsa;
 	
+	/** The text. */
 	public String text = "Yellow and Black Border Collies";
+	
+	/** The cipher text. */
 	public BigInteger cipherText;
 	/**
 	 * Instantiates a new client.
@@ -297,18 +307,38 @@ public class Client implements Serializable {
 		this.sharedFiles.put(file, fileDetails);
 	}
 	
+	/**
+	 * Gets the keys directory.
+	 *
+	 * @return the keys directory
+	 */
 	public File getKeysDirectory() {
 		return keysDirectory;
 	}
 
+	/**
+	 * Sets the keys directory.
+	 *
+	 * @param keysDirectory the new keys directory
+	 */
 	public void setKeysDirectory(File keysDirectory) {
 		this.keysDirectory = keysDirectory;
 	}
 	
+	/**
+	 * Gets the shared keys directory.
+	 *
+	 * @return the shared keys directory
+	 */
 	public File getSharedKeysDirectory() {
 		return sharedKeysDirectory;
 	}
 
+	/**
+	 * Sets the shared keys directory.
+	 *
+	 * @param sharedKeysDirectory the new shared keys directory
+	 */
 	public void setSharedKeysDirectory(File sharedKeysDirectory) {
 		this.sharedKeysDirectory = sharedKeysDirectory;
 	}
@@ -601,7 +631,7 @@ public class Client implements Serializable {
 	 * Modify master file.
 	 *
 	 * @param fileName the file name
-	 * @throws IOException 
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public void modifyMasterFile(String fileName) throws IOException {
 		P2PFile p2pFile = this.masterFiles.get(fileName);
@@ -665,6 +695,9 @@ public class Client implements Serializable {
 		}
     }
 	
+	/**
+	 * Generate keys.
+	 */
 	private void generateKeys() {
 		
 		if(this.keysDirectory.exists()) {
@@ -678,6 +711,9 @@ public class Client implements Serializable {
 		writeKeys();
 	}
 	
+	/**
+	 * Write keys.
+	 */
 	private void writeKeys() {
 		
 		logger.info("Writing RSA keys");
@@ -727,6 +763,12 @@ public class Client implements Serializable {
 		}
 	}
 	
+	/**
+	 * Read private key.
+	 *
+	 * @param id the id
+	 * @return the RSA private key
+	 */
 	private RSAPrivateKey readPrivateKey(String id) {
 		logger.info("[" + this.id + "] Reading private key.");
 		RSAPrivateKey rsaPrivateKey = null;
@@ -762,6 +804,12 @@ public class Client implements Serializable {
 		return rsaPrivateKey;
 	}
 	
+	/**
+	 * Read public key.
+	 *
+	 * @param id the id
+	 * @return the RSA public key
+	 */
 	private RSAPublicKey readPublicKey(String id) {
 		logger.info("[" + this.id + "] Reading public key.");
 		RSAPublicKey rsaPublicKey = null;

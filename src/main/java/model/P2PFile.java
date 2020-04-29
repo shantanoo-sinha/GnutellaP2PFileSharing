@@ -25,6 +25,7 @@ public class P2PFile implements Serializable{
 	/** The origin server ID. */
 	private String originServerID;
 	
+	/** The origin server address. */
 	private String originServerAddress;
 	
 	/** The origin server super peer ID. */
@@ -138,7 +139,7 @@ public class P2PFile implements Serializable{
 	/**
 	 * Sets the origin server Address.
 	 *
-	 * @param originServerID the new origin server Address
+	 * @param originServerAddress the new origin server address
 	 */
 	public void setOriginServerAddress(String originServerAddress) {
 		this.originServerAddress = originServerAddress;

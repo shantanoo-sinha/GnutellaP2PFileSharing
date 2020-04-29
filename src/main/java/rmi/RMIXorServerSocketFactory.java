@@ -45,24 +45,45 @@ import java.rmi.server.RMIServerSocketFactory;
 import security.RSAPrivateKey;
 import security.RSAPublicKey;
 
+/**
+ * A factory for creating RMIXorServerSocket objects.
+ */
 public class RMIXorServerSocketFactory implements RMIServerSocketFactory {
 
+	/** The rsa public key. */
 	private RSAPublicKey rsaPublicKey;
+	
+	/** The rsa private key. */
 	private RSAPrivateKey rsaPrivateKey;
 	
+	/**
+	 * Instantiates a new RMI xor server socket factory.
+	 *
+	 * @param rsaPublicKey the rsa public key
+	 * @param rsaPrivateKey the rsa private key
+	 */
 	public RMIXorServerSocketFactory(RSAPublicKey rsaPublicKey, RSAPrivateKey rsaPrivateKey) {
 		this.rsaPublicKey = rsaPublicKey;
 		this.rsaPrivateKey = rsaPrivateKey;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.rmi.server.RMIServerSocketFactory#createServerSocket(int)
+	 */
 	public ServerSocket createServerSocket(int port) throws IOException {
 		return new RMIXorServerSocket(port, rsaPublicKey, rsaPrivateKey);
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	public int hashCode() {
 		return (int) this.rsaPrivateKey.getModulus().intValue();
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	public boolean equals(Object obj) {
 		return (getClass() == obj.getClass() && this.rsaPrivateKey == ((RMIXorServerSocketFactory) obj).rsaPrivateKey);
 	}

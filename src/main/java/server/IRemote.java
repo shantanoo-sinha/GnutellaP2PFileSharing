@@ -37,8 +37,7 @@ public interface IRemote extends Remote {
 	/**
 	 * Register master files to super peer.
 	 *
-	 * @param leafNodeAddress the leaf node address
-	 * @param files the files
+	 * @param bytes the bytes
 	 * @throws RemoteException the remote exception
 	 */
 //	public void registerMasterFilesToSuperPeer(String leafNodeAddress, Map<String, P2PFile> files) throws RemoteException;
@@ -47,8 +46,7 @@ public interface IRemote extends Remote {
 	/**
 	 * Register shared files to super peer.
 	 *
-	 * @param leafNodeAddress the leaf node address
-	 * @param files the files
+	 * @param bytes the bytes
 	 * @throws RemoteException the remote exception
 	 */
 //	public void registerSharedFilesToSuperPeer(String leafNodeAddress, Map<String, P2PFile> files) throws RemoteException;
@@ -62,14 +60,19 @@ public interface IRemote extends Remote {
 	 * @throws RemoteException the remote exception
 	 */
 	public void updateSharedFilesToSuperPeer(String leafNodeAddress, Map<String, P2PFile> files) throws RemoteException;
+	
+	/**
+	 * Update shared files to super peer.
+	 *
+	 * @param bytes the bytes
+	 * @throws RemoteException the remote exception
+	 */
 	public void updateSharedFilesToSuperPeer(byte[] bytes) throws RemoteException;
+	
 	/**
 	 * Query.
 	 *
-	 * @param messageID the message ID
-	 * @param TTL the ttl
-	 * @param fileName the file name
-	 * @param upstreamIPAddress the upstream IP address
+	 * @param bytes the bytes
 	 * @throws RemoteException the remote exception
 	 */
 //	public void query(MessageID messageID, long TTL, String fileName, String upstreamIPAddress) throws RemoteException;
@@ -78,10 +81,7 @@ public interface IRemote extends Remote {
 	/**
 	 * Queryhit.
 	 *
-	 * @param messageID the message ID
-	 * @param TTL the ttl
-	 * @param fileName the file name
-	 * @param leafNodeIP the leaf node IP
+	 * @param bytes the bytes
 	 * @throws RemoteException the remote exception
 	 */
 //	public void queryHit(MessageID messageID, long TTL, String fileName, String leafNodeIP) throws RemoteException;
@@ -90,8 +90,7 @@ public interface IRemote extends Remote {
 	/**
 	 * Obtain.
 	 *
-	 * @param fileName the file name
-	 * @param leafNodeIP the leaf node IP
+	 * @param bytes the bytes
 	 * @return the byte[]
 	 * @throws RemoteException the remote exception
 	 * @throws IOException Signals that an I/O exception has occurred.
@@ -102,7 +101,7 @@ public interface IRemote extends Remote {
 	/**
 	 * Check upstream map.
 	 *
-	 * @param messageID the message ID
+	 * @param bytes the bytes
 	 * @return true, if successful
 	 * @throws RemoteException the remote exception
 	 */
@@ -112,9 +111,7 @@ public interface IRemote extends Remote {
 	/**
 	 * Invalidate.
 	 *
-	 * @param messageID the message ID
-	 * @param p2pFile the p 2 p file
-	 * @param upstreamIP the upstream IP
+	 * @param bytes the bytes
 	 * @throws RemoteException the remote exception
 	 */
 //	public void invalidate(MessageID messageID, P2PFile p2pFile, String upstreamIP) throws RemoteException;
@@ -146,7 +143,23 @@ public interface IRemote extends Remote {
 	 */
 	public List<P2PFile> poll(List<P2PFile> p2pFiles) throws RemoteException;
 	
+	/**
+	 * Share public key.
+	 *
+	 * @param publicKey the public key
+	 * @param clientName the client name
+	 * @return true, if successful
+	 * @throws RemoteException the remote exception
+	 */
 	public boolean sharePublicKey(byte[] publicKey, String clientName) throws RemoteException;
 
+	/**
+	 * Share public key and get public key.
+	 *
+	 * @param publicKey the public key
+	 * @param id the id
+	 * @return the byte[]
+	 * @throws RemoteException the remote exception
+	 */
 	public byte[] sharePublicKeyAndGetPublicKey(byte[] publicKey, String id) throws RemoteException;
 }

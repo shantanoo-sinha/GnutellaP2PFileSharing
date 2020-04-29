@@ -45,15 +45,29 @@ import java.net.Socket;
 import security.RSAPrivateKey;
 import security.RSAPublicKey;
 
+/**
+ * The Class RMIXorServerSocket.
+ */
 class RMIXorServerSocket extends ServerSocket {
 
+	/** The rsa public key. */
 	/*
 	 * The pattern used to "encrypt" and "decrypt" each byte sent or received by the
 	 * socket.
 	 */
 	private RSAPublicKey rsaPublicKey;
+	
+	/** The rsa private key. */
 	private RSAPrivateKey rsaPrivateKey;
 	
+	/**
+	 * Instantiates a new RMI xor server socket.
+	 *
+	 * @param port the port
+	 * @param rsaPublicKey the rsa public key
+	 * @param rsaPrivateKey the rsa private key
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	/*
 	 * Constructor for class XorServerSocket.
 	 */
@@ -63,6 +77,9 @@ class RMIXorServerSocket extends ServerSocket {
 		this.rsaPrivateKey = rsaPrivateKey;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.net.ServerSocket#accept()
+	 */
 	/*
 	 * Creates a socket of type XorSocket and then calls implAccept to wait for a
 	 * client connection.

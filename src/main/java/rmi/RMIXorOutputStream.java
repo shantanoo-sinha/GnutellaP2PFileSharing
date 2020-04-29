@@ -43,22 +43,35 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import security.RSAEncryption;
-import security.RSAPrivateKey;
 import security.RSAPublicKey;
 
+/**
+ * The Class RMIXorOutputStream.
+ */
 class RMIXorOutputStream extends FilterOutputStream {
 
+	/** The rsa public key. */
 	/*
 	 * The byte used to "encrypt" each byte of data.
 	 */
 	private RSAPublicKey rsaPublicKey;
+
+/** The ibuffer. */
 //	private RSAPrivateKey rsaPrivateKey;
 	private byte[] ibuffer = new byte[1];
+	
+	/** The rsa. */
 	private RSAEncryption rsa;
 
 	/*
 	 * Constructs an output stream that uses the specified pattern to "encrypt" each
 	 * byte of data.
+	 */
+	/**
+	 * Instantiates a new RMI xor output stream.
+	 *
+	 * @param out the out
+	 * @param publicKey the public key
 	 */
 	/*public RMIXorOutputStream(OutputStream out, byte pattern) {
 		super(out);
@@ -78,6 +91,9 @@ class RMIXorOutputStream extends FilterOutputStream {
 		System.out.println("before write:" + ((b ^ pattern) & 0xFF));
 //		out.write((b ^ pattern) & 0xFF);
 	}*/
+	/* (non-Javadoc)
+	 * @see java.io.FilterOutputStream#write(int)
+	 */
 	/*
 	 * Encrypt the byte being written with the private key and writes the result.
 	 */	
@@ -88,10 +104,16 @@ class RMIXorOutputStream extends FilterOutputStream {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see java.io.FilterOutputStream#write(byte[])
+	 */
 	public void write(byte[] paramArrayOfByte) throws IOException {
 		write(paramArrayOfByte, 0, paramArrayOfByte.length);
 	}
 
+	/* (non-Javadoc)
+	 * @see java.io.FilterOutputStream#write(byte[], int, int)
+	 */
 	public void write(byte[] paramArrayOfByte, int paramInt1, int paramInt2) throws IOException {
 		byte[] encryptData = rsa.encryptData(paramArrayOfByte);
 		out.write(encryptData);

@@ -38,16 +38,27 @@
 
 package rmi;
 
-import java.io.*;
-import java.util.Arrays;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
+/**
+ * The Class XorInputStream.
+ */
 class XorInputStream extends FilterInputStream {
 
+	/** The pattern. */
 	/*
 	 * The byte being used to "decrypt" each byte of data.
 	 */
 	private final byte pattern;
 
+	/**
+	 * Instantiates a new xor input stream.
+	 *
+	 * @param in the in
+	 * @param pattern the pattern
+	 */
 	/*
 	 * Constructs an input stream that uses the specified pattern to "decrypt" each
 	 * byte of data.
@@ -57,6 +68,9 @@ class XorInputStream extends FilterInputStream {
 		this.pattern = pattern;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.io.FilterInputStream#read()
+	 */
 	/*
 	 * Reads in a byte and xor's the byte with the pattern. Returns the byte.
 	 */
@@ -71,6 +85,9 @@ class XorInputStream extends FilterInputStream {
 		return b;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.io.FilterInputStream#read(byte[], int, int)
+	 */
 	/*
 	 * Reads up to len bytes
 	 */

@@ -46,21 +46,36 @@ import java.net.Socket;
 import security.RSAPrivateKey;
 import security.RSAPublicKey;
 
+/**
+ * The Class RMIXorSocket.
+ */
 class RMIXorSocket extends Socket {
 
+	/** The rsa public key. */
 	/*
 	 * The pattern used to "encrypt" and "decrypt" each byte sent or received by the
 	 * socket.
 	 */
 	private RSAPublicKey rsaPublicKey;
+	
+	/** The rsa private key. */
 	private RSAPrivateKey rsaPrivateKey;
 	
+	/** The in. */
 	/* The InputStream used by the socket. */
 	private InputStream in = null;
 
+	/** The out. */
 	/* The OutputStream used by the socket */
 	private OutputStream out = null;
 
+	/**
+	 * Instantiates a new RMI xor socket.
+	 *
+	 * @param rsaPublicKey the rsa public key
+	 * @param rsaPrivateKey the rsa private key
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	/*
 	 * Constructor for class XorSocket.
 	 */
@@ -70,6 +85,15 @@ class RMIXorSocket extends Socket {
 		this.rsaPrivateKey = rsaPrivateKey;
 	}
 
+	/**
+	 * Instantiates a new RMI xor socket.
+	 *
+	 * @param host the host
+	 * @param port the port
+	 * @param rsaPublicKey the rsa public key
+	 * @param rsaPrivateKey the rsa private key
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	/*
 	 * Constructor for class XorSocket.
 	 */
@@ -79,6 +103,9 @@ class RMIXorSocket extends Socket {
 		this.rsaPrivateKey = rsaPrivateKey;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.net.Socket#getInputStream()
+	 */
 	/*
 	 * Returns a stream of type XorInputStream.
 	 */
@@ -89,6 +116,9 @@ class RMIXorSocket extends Socket {
 		return in;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.net.Socket#getOutputStream()
+	 */
 	/*
 	 * Returns a stream of type XorOutputStream.
 	 */

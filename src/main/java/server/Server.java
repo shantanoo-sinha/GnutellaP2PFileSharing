@@ -110,6 +110,8 @@ public class Server implements IRemote, Serializable {
 	
 	/** The super peer. */
 	private String superPeer;
+	
+	/** The super peer ID. */
 	private String superPeerID;
 	
 	/** The leaf nodes. */
@@ -118,14 +120,22 @@ public class Server implements IRemote, Serializable {
 	/** The leaf nodes map. */
 	public Map<String, Client> leafNodesMap = new HashMap<>();
 	
+	/** The keys directory. */
 	private File keysDirectory;
+	
+	/** The shared keys directory. */
 	private File sharedKeysDirectory;
 
+	/** The rsa key pair. */
 	private RSAKeyPair rsaKeyPair;
 	
+	/** The rsa public key. */
 	private RSAPublicKey rsaPublicKey = null;
+    
+    /** The rsa private key. */
     private RSAPrivateKey rsaPrivateKey = null;
     
+    /** The rsa. */
     private RSAEncryption rsa;
     
 	/**
@@ -142,6 +152,8 @@ public class Server implements IRemote, Serializable {
 	 * @param id the id
 	 * @param peerNetworkTopology the peer network topology
 	 * @param TTR the ttr
+	 * @param rsaKeyPair the rsa key pair
+	 * @param rsa the rsa
 	 */
 	public Server(Client client, String id, String peerNetworkTopology, long TTR, RSAKeyPair rsaKeyPair, RSAEncryption rsa) {
 		this();
@@ -248,6 +260,12 @@ public class Server implements IRemote, Serializable {
 		return upstreamMap;
 	}
 
+	/**
+	 * Check upstream map.
+	 *
+	 * @param messageId the message id
+	 * @return true, if successful
+	 */
 	/* (non-Javadoc)
 	 * @see server.IRemote#checkUpstreamMap(model.MessageID)
 	 */
@@ -255,6 +273,9 @@ public class Server implements IRemote, Serializable {
 		return upstreamMap.containsKey(messageId);
 	}
 	
+	/* (non-Javadoc)
+	 * @see server.IRemote#checkUpstreamMap(byte[])
+	 */
 	public boolean checkUpstreamMap(byte[] bytes) {
 		MessageID messageID = null;
 		try {
@@ -298,6 +319,11 @@ public class Server implements IRemote, Serializable {
 		return superPeer;
 	}
 
+	/**
+	 * Gets the super peer ID.
+	 *
+	 * @return the super peer ID
+	 */
 	public String getSuperPeerID() {
 		return superPeerID;
 	}
@@ -364,34 +390,74 @@ public class Server implements IRemote, Serializable {
 		return leafNodes;
 	}
 
+	/**
+	 * Gets the keys directory.
+	 *
+	 * @return the keys directory
+	 */
 	public File getKeysDirectory() {
 		return keysDirectory;
 	}
 
+	/**
+	 * Sets the keys directory.
+	 *
+	 * @param keysDirectory the new keys directory
+	 */
 	public void setKeysDirectory(File keysDirectory) {
 		this.keysDirectory = keysDirectory;
 	}
 
+	/**
+	 * Gets the shared keys directory.
+	 *
+	 * @return the shared keys directory
+	 */
 	public File getSharedKeysDirectory() {
 		return sharedKeysDirectory;
 	}
 
+	/**
+	 * Sets the shared keys directory.
+	 *
+	 * @param sharedKeysDirectory the new shared keys directory
+	 */
 	public void setSharedKeysDirectory(File sharedKeysDirectory) {
 		this.sharedKeysDirectory = sharedKeysDirectory;
 	}
 	
+	/**
+	 * Gets the rsa public key.
+	 *
+	 * @return the rsa public key
+	 */
 	public RSAPublicKey getRsaPublicKey() {
 		return rsaPublicKey;
 	}
 
+	/**
+	 * Sets the rsa public key.
+	 *
+	 * @param rsaPublicKey the new rsa public key
+	 */
 	public void setRsaPublicKey(RSAPublicKey rsaPublicKey) {
 		this.rsaPublicKey = rsaPublicKey;
 	}
 
+	/**
+	 * Gets the rsa private key.
+	 *
+	 * @return the rsa private key
+	 */
 	public RSAPrivateKey getRsaPrivateKey() {
 		return rsaPrivateKey;
 	}
 
+	/**
+	 * Sets the rsa private key.
+	 *
+	 * @param rsaPrivateKey the new rsa private key
+	 */
 	public void setRsaPrivateKey(RSAPrivateKey rsaPrivateKey) {
 		this.rsaPrivateKey = rsaPrivateKey;
 	}
@@ -563,6 +629,9 @@ public class Server implements IRemote, Serializable {
 		}
 	}
 	
+/* (non-Javadoc)
+ * @see server.IRemote#query(byte[])
+ */
 //	public void query(MessageID messageID, long TTL, String fileName, String upstreamIP) throws RemoteException {
 	public void query(byte[] bytes) throws RemoteException {
 		MessageID messageID = null;
@@ -771,6 +840,9 @@ public class Server implements IRemote, Serializable {
 		
 	}
 
+/* (non-Javadoc)
+ * @see server.IRemote#queryHit(byte[])
+ */
 //	public void queryHit(MessageID messageID, long TTL, String fileName, String leafNodeIP) throws RemoteException {
 	public void queryHit(byte[] bytes) throws RemoteException {
 		MessageID messageID = null;
@@ -864,6 +936,9 @@ public class Server implements IRemote, Serializable {
 		}
 	}
 	
+/* (non-Javadoc)
+ * @see server.IRemote#obtain(byte[])
+ */
 //	public P2PFile obtain(String fileName, String leafNodeIP) throws IOException {
 	public byte[] obtain(byte[] bytes) throws IOException {
 		
@@ -916,7 +991,7 @@ public class Server implements IRemote, Serializable {
 	/**
 	 * Write file content.
 	 *
-	 * @param fileContent the file content
+	 * @param p2pFile the p 2 p file
 	 * @param fileName the file name
 	 * @return true, if successful
 	 */
@@ -999,6 +1074,12 @@ public class Server implements IRemote, Serializable {
 		return prop.getProperty(key);
 	}
 	
+	/**
+	 * Gets the property from value.
+	 *
+	 * @param value the value
+	 * @return the property from value
+	 */
 	private String getPropertyFromValue(String value) {
 		return (String) prop.entrySet().stream()
 				.filter(entry -> entry.getKey().toString().startsWith(Constants.CLIENT_PREFIX) && entry.getValue().toString().equals(value))
@@ -1389,6 +1470,9 @@ public class Server implements IRemote, Serializable {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see server.IRemote#updateSharedFilesToSuperPeer(byte[])
+	 */
 	public void updateSharedFilesToSuperPeer(byte[] bytes) throws RemoteException {
 		String leafNodeAddress = null;
 		Map<String, P2PFile> files = null;
@@ -1508,6 +1592,9 @@ public class Server implements IRemote, Serializable {
 		}
 	}
 	
+	/**
+	 * Share public key to all.
+	 */
 	public void sharePublicKeyToAll() {
 		byte[] publicKey = readPublicKey(this.id);
 		prop.entrySet().stream().filter(entry -> entry.toString().contains(Constants.PORT)).forEach(entry -> {
@@ -1532,6 +1619,9 @@ public class Server implements IRemote, Serializable {
 		});
 	}
 
+	/* (non-Javadoc)
+	 * @see server.IRemote#sharePublicKey(byte[], java.lang.String)
+	 */
 	@Override
 	public boolean sharePublicKey(byte[] publicKey, String clientName) {
 		FileOutputStream fileOutputStream = null;
@@ -1559,6 +1649,11 @@ public class Server implements IRemote, Serializable {
 		return isFileDownloaded;
 	}
 	
+	/**
+	 * Share public key.
+	 *
+	 * @param id the id
+	 */
 	public void sharePublicKey(String id) {
 		
 		String nodeAddress = Constants.RMI_LOCALHOST + prop.getProperty(id + Constants.PORT) + Constants.PEER_SERVER;
@@ -1600,6 +1695,9 @@ public class Server implements IRemote, Serializable {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see server.IRemote#sharePublicKeyAndGetPublicKey(byte[], java.lang.String)
+	 */
 	public byte[] sharePublicKeyAndGetPublicKey(byte[] publicKey, String clientName) throws RemoteException {
 		FileOutputStream fileOutputStream = null;
 		byte[] encryptedRSAPublicKey = null;
@@ -1629,6 +1727,9 @@ public class Server implements IRemote, Serializable {
 		return encryptedRSAPublicKey;
 	}
 	
+	/**
+	 * Share public key to super peers.
+	 */
 	public void sharePublicKeyToSuperPeers() {
 
 		if(!isSuperPeer())
@@ -1690,6 +1791,12 @@ public class Server implements IRemote, Serializable {
 		}
 	}
 	
+	/**
+	 * Read public key.
+	 *
+	 * @param id the id
+	 * @return the byte[]
+	 */
 	private byte[] readPublicKey(String id) {
 		
 		String publicKeyFile = getKeysDirectory() + File.separator + id + Constants.PUBLIC_KEY_SUFFIX;

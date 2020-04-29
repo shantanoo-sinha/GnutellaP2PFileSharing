@@ -9,22 +9,43 @@ import org.apache.logging.log4j.Logger;
 
 import server.Server;
 
+/**
+ * The Class RSAEncryption.
+ */
 public class RSAEncryption {
 	
+	/** The Constant logger. */
 	private static final Logger logger = LogManager.getLogger(Server.class);
 	
+	/** The Constant one. */
 	private final static BigInteger one = new BigInteger("1");
+	
+	/** The Constant random. */
 	private final static SecureRandom random = new SecureRandom();
 
+	/** The private key. */
 	private BigInteger privateKey;
+	
+	/** The public key. */
 	private BigInteger publicKey;
+	
+	/** The modulus. */
 	private BigInteger modulus;
 
+	/** The bit len. */
 	private int bitLen = 1024;
 	
+	/** The rsa private key. */
 	private RSAPrivateKey rsaPrivateKey;
+	
+	/** The rsa public key. */
 	private RSAPublicKey rsaPublicKey;
 
+	/**
+	 * Instantiates a new RSA encryption.
+	 *
+	 * @param N the n
+	 */
 	// generate an N-bit (roughly) public and private key
 	public RSAEncryption(int N) {
 		this.bitLen = N;
@@ -41,49 +62,106 @@ public class RSAEncryption {
 		rsaPublicKey = new RSAPublicKey(modulus, publicKey);
 	}
 	
-	/** Create an instance that can encrypt using someone else's public key. */
+	/**
+	 *  Create an instance that can encrypt using someone else's public key.
+	 *
+	 * @param newn the newn
+	 * @param newe the newe
+	 * @param newd the newd
+	 */
 	public RSAEncryption(BigInteger newn, BigInteger newe, BigInteger newd) {
 		this.modulus = newn;
 		this.publicKey = newe;
 		this.privateKey = newd;
 	}
 
+	/**
+	 * Encrypt.
+	 *
+	 * @param message the message
+	 * @return the big integer
+	 */
 	public BigInteger encrypt(BigInteger message) {
 		return message.modPow(publicKey, modulus);
 	}
 
+	/**
+	 * Decrypt.
+	 *
+	 * @param encrypted the encrypted
+	 * @return the big integer
+	 */
 	public BigInteger decrypt(BigInteger encrypted) {
 		return encrypted.modPow(privateKey, modulus);
 	}
 
+	/**
+	 * Encrypt.
+	 *
+	 * @param message the message
+	 * @return the big integer
+	 */
 	public BigInteger encrypt(byte[] message) {
 		return new BigInteger(message).modPow(publicKey, modulus);
 	}
 
+	/**
+	 * Decrypt.
+	 *
+	 * @param encrypted the encrypted
+	 * @return the big integer
+	 */
 	public BigInteger decrypt(byte[] encrypted) {
 		return new BigInteger(encrypted).modPow(privateKey, modulus);
 	}
 	
+	/**
+	 * Encrypt to bytes.
+	 *
+	 * @param message the message
+	 * @return the byte[]
+	 */
 	public byte[] encryptToBytes(byte[] message) {
 		BigInteger bigInteger = new BigInteger(1, message).modPow(publicKey, modulus);
 		return toByteArray(bigInteger, getByteLength());
 	}
 	
+	/**
+	 * Encrypt to bytes with private key.
+	 *
+	 * @param message the message
+	 * @return the byte[]
+	 */
 	public byte[] encryptToBytesWithPrivateKey(byte[] message) {
 		BigInteger bigInteger = new BigInteger(1, message).modPow(privateKey, modulus);
 		return toByteArray(bigInteger, getByteLength());
 	}
 
+	/**
+	 * Decrypt to bytes.
+	 *
+	 * @param encrypted the encrypted
+	 * @return the byte[]
+	 */
 	public byte[] decryptToBytes(byte[] encrypted) {
 		BigInteger bigInteger = new BigInteger(1, encrypted).modPow(privateKey, modulus);
 		return toByteArray(bigInteger, getByteLength());
 	}
 	
+	/**
+	 * Decrypt to bytes with public key.
+	 *
+	 * @param encrypted the encrypted
+	 * @return the byte[]
+	 */
 	public byte[] decryptToBytesWithPublicKey(byte[] encrypted) {
 		BigInteger bigInteger = new BigInteger(1, encrypted).modPow(publicKey, modulus);
 		return toByteArray(bigInteger, getByteLength());
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	public String toString() {
 		String s = "";
 		s += "public  = " + publicKey + "\n";
@@ -92,6 +170,11 @@ public class RSAEncryption {
 		return s;
 	}
 
+	/**
+	 * The main method.
+	 *
+	 * @param args the arguments
+	 */
 	public static void main(String[] args) {
 		int N = 1024;
 		RSAEncryption key = new RSAEncryption(N);
@@ -119,23 +202,50 @@ public class RSAEncryption {
 		logger.info("decrypted = " + decrypt1);
 	}
 	
+	/**
+	 * Gets the byte length.
+	 *
+	 * @return the byte length
+	 */
 	public int getByteLength() {
 		int i = getModulus().bitLength();
 		return i + 7 >> 3;
 	}
 
+	/**
+	 * Gets the private key.
+	 *
+	 * @return the private key
+	 */
 	public BigInteger getPrivateKey() {
 		return privateKey;
 	}
 
+	/**
+	 * Gets the public key.
+	 *
+	 * @return the public key
+	 */
 	public BigInteger getPublicKey() {
 		return publicKey;
 	}
 
+	/**
+	 * Gets the modulus.
+	 *
+	 * @return the modulus
+	 */
 	public BigInteger getModulus() {
 		return modulus;
 	}
 	
+	/**
+	 * To byte array.
+	 *
+	 * @param bi the bi
+	 * @param len the len
+	 * @return the byte[]
+	 */
 	private static byte[] toByteArray(BigInteger bi, int len) {
         byte[] b = bi.toByteArray();
         int n = b.length;
@@ -155,6 +265,12 @@ public class RSAEncryption {
         return t;
     }
 	
+	/**
+	 * Encrypt data.
+	 *
+	 * @param plainMessage the plain message
+	 * @return the byte[]
+	 */
 	public byte[] encryptData(byte[] plainMessage) {
     	int keySize = getByteLength();
 		int maxBlockSize = (keySize - 11);
@@ -190,6 +306,12 @@ public class RSAEncryption {
         return encryptedMessage;
     }
 	
+	/**
+	 * Encrypt data with private key.
+	 *
+	 * @param plainMessage the plain message
+	 * @return the byte[]
+	 */
 	public byte[] encryptDataWithPrivateKey(byte[] plainMessage) {
     	int keySize = getByteLength();
 		int maxBlockSize = (keySize - 11);
@@ -225,6 +347,13 @@ public class RSAEncryption {
         return encryptedMessage;
     }
 	
+	/**
+	 * Decrypt data.
+	 *
+	 * @param encryptedMessage the encrypted message
+	 * @return the byte[]
+	 * @throws Exception the exception
+	 */
 	public byte[] decryptData(byte[] encryptedMessage) throws Exception {
 		int keySize = getByteLength();
 		int maxBlockSize = (keySize - 11);
@@ -247,6 +376,13 @@ public class RSAEncryption {
         return decryptedMessage;
 	}
 	
+	/**
+	 * Decrypt data with public key.
+	 *
+	 * @param encryptedMessage the encrypted message
+	 * @return the byte[]
+	 * @throws Exception the exception
+	 */
 	public byte[] decryptDataWithPublicKey(byte[] encryptedMessage) throws Exception {
 		int keySize = getByteLength();
 		int maxBlockSize = (keySize - 11);
@@ -269,6 +405,13 @@ public class RSAEncryption {
         return decryptedMessage;
 	}
 	
+	/**
+	 * Pad.
+	 *
+	 * @param data the data
+	 * @param paddedSize the padded size
+	 * @return the byte[]
+	 */
 	public byte[] pad(byte[] data, int paddedSize) {
     	byte[] byteArray = new byte[paddedSize];
     	System.arraycopy(data, 0, byteArray, paddedSize - data.length, data.length);
@@ -294,6 +437,14 @@ public class RSAEncryption {
     	return byteArray;
     }
     
+	/**
+	 * Unpad.
+	 *
+	 * @param paramArrayOfByte the param array of byte
+	 * @param maxDataSize the max data size
+	 * @return the byte[]
+	 * @throws Exception the exception
+	 */
 	public byte[] unpad(byte[] paramArrayOfByte, int maxDataSize) throws Exception {
 		int i = 0;
 		if (paramArrayOfByte[(i++)] != 0) {
@@ -322,6 +473,13 @@ public class RSAEncryption {
 		return arrayOfByte2;
 	}
     
+    /**
+     * Concatenate byte arrays.
+     *
+     * @param decryptedMessage the decrypted message
+     * @param decryptedChunk the decrypted chunk
+     * @return the byte[]
+     */
     public static byte[] concatenateByteArrays(byte[] decryptedMessage, byte[] decryptedChunk) {
 		byte[] c = new byte[decryptedMessage.length + decryptedChunk.length];
 		System.arraycopy(decryptedMessage, 0, c, 0, decryptedMessage.length);
@@ -329,6 +487,11 @@ public class RSAEncryption {
 		return c;
 	}
     
+    /**
+     * Gets the RSA key pair.
+     *
+     * @return the RSA key pair
+     */
     public RSAKeyPair getRSAKeyPair() {
 		return new RSAKeyPair(rsaPrivateKey, rsaPublicKey);
 	}

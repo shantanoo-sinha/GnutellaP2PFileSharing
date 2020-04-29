@@ -38,23 +38,37 @@
 
 package rmi;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 
+/**
+ * The Class XorSocket.
+ */
 class XorSocket extends Socket {
 
+	/** The pattern. */
 	/*
 	 * The pattern used to "encrypt" and "decrypt" each byte sent or received by the
 	 * socket.
 	 */
 	private final byte pattern;
 
+	/** The in. */
 	/* The InputStream used by the socket. */
 	private InputStream in = null;
 
+	/** The out. */
 	/* The OutputStream used by the socket */
 	private OutputStream out = null;
 
+	/**
+	 * Instantiates a new xor socket.
+	 *
+	 * @param pattern the pattern
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	/*
 	 * Constructor for class XorSocket.
 	 */
@@ -63,6 +77,14 @@ class XorSocket extends Socket {
 		this.pattern = pattern;
 	}
 
+	/**
+	 * Instantiates a new xor socket.
+	 *
+	 * @param host the host
+	 * @param port the port
+	 * @param pattern the pattern
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	/*
 	 * Constructor for class XorSocket.
 	 */
@@ -71,6 +93,9 @@ class XorSocket extends Socket {
 		this.pattern = pattern;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.net.Socket#getInputStream()
+	 */
 	/*
 	 * Returns a stream of type XorInputStream.
 	 */
@@ -81,6 +106,9 @@ class XorSocket extends Socket {
 		return in;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.net.Socket#getOutputStream()
+	 */
 	/*
 	 * Returns a stream of type XorOutputStream.
 	 */

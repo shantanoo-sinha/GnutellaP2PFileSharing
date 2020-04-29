@@ -7,16 +7,19 @@ import java.io.Serializable;
 import java.math.BigInteger;
 
 /**
- * @author Shantanoo
+ * The Class RSAPrivateKey.
  *
+ * @author Shantanoo
  */
 public class RSAPrivateKey implements Serializable {
 
-    /**
-	 * 
-	 */
+    /** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -7003287257884027407L;
+	
+	/** The modulus. */
 	private BigInteger modulus;
+    
+    /** The private exponent. */
     private BigInteger privateExponent;
 
     /**

@@ -30,6 +30,7 @@ public class FileDownloader extends Thread {
 	/** The Constant logger. */
 	private static final Logger logger = LogManager.getLogger(FileDownloader.class);
 	
+	/** The remote ID. */
 	private String remoteID;
 	
 	/** The remote. */
@@ -44,6 +45,7 @@ public class FileDownloader extends Thread {
 	/**
 	 * Instantiates a new file downloader.
 	 *
+	 * @param remoteID the remote ID
 	 * @param remote the remote
 	 * @param server the server
 	 * @param fileName the file name

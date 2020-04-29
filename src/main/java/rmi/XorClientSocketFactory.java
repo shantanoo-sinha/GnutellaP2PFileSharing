@@ -38,30 +38,48 @@
 
 package rmi;
 
-import java.io.*;
-import java.net.*;
-import java.rmi.server.*;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.Socket;
+import java.rmi.server.RMIClientSocketFactory;
 
+/**
+ * A factory for creating XorClientSocket objects.
+ */
 public class XorClientSocketFactory implements RMIClientSocketFactory, Serializable {
 
-	/**
-	 * 
-	 */
+	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1383028760456996035L;
+	
+	/** The pattern. */
 	private final byte pattern;
 
+	/**
+	 * Instantiates a new xor client socket factory.
+	 *
+	 * @param pattern the pattern
+	 */
 	public XorClientSocketFactory(byte pattern) {
 		this.pattern = pattern;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.rmi.server.RMIClientSocketFactory#createSocket(java.lang.String, int)
+	 */
 	public Socket createSocket(String host, int port) throws IOException {
 		return new XorSocket(host, port, pattern);
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	public int hashCode() {
 		return (int) pattern;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	public boolean equals(Object obj) {
 		return (getClass() == obj.getClass() && pattern == ((XorClientSocketFactory) obj).pattern);
 	}

@@ -38,15 +38,27 @@
 
 package rmi;
 
-import java.io.*;
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
+/**
+ * The Class XorOutputStream.
+ */
 class XorOutputStream extends FilterOutputStream {
 
+	/** The pattern. */
 	/*
 	 * The byte used to "encrypt" each byte of data.
 	 */
 	private final byte pattern;
 
+	/**
+	 * Instantiates a new xor output stream.
+	 *
+	 * @param out the out
+	 * @param pattern the pattern
+	 */
 	/*
 	 * Constructs an output stream that uses the specified pattern to "encrypt" each
 	 * byte of data.
@@ -56,6 +68,9 @@ class XorOutputStream extends FilterOutputStream {
 		this.pattern = pattern;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.io.FilterOutputStream#write(int)
+	 */
 	/*
 	 * XOR's the byte being written with the pattern and writes the result.
 	 */

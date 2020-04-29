@@ -38,26 +38,44 @@
 
 package rmi;
 
-import java.io.*;
-import java.net.*;
-import java.rmi.server.*;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.rmi.server.RMIServerSocketFactory;
 
+/**
+ * A factory for creating XorServerSocket objects.
+ */
 public class XorServerSocketFactory implements RMIServerSocketFactory {
 
+	/** The pattern. */
 	private final byte pattern;
 
+	/**
+	 * Instantiates a new xor server socket factory.
+	 *
+	 * @param pattern the pattern
+	 */
 	public XorServerSocketFactory(byte pattern) {
 		this.pattern = pattern;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.rmi.server.RMIServerSocketFactory#createServerSocket(int)
+	 */
 	public ServerSocket createServerSocket(int port) throws IOException {
 		return new XorServerSocket(port, pattern);
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	public int hashCode() {
 		return (int) pattern;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	public boolean equals(Object obj) {
 		return (getClass() == obj.getClass() && pattern == ((XorServerSocketFactory) obj).pattern);
 	}

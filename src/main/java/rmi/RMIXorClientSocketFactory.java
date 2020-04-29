@@ -46,28 +46,48 @@ import java.rmi.server.RMIClientSocketFactory;
 import security.RSAPrivateKey;
 import security.RSAPublicKey;
 
+/**
+ * A factory for creating RMIXorClientSocket objects.
+ */
 public class RMIXorClientSocketFactory implements RMIClientSocketFactory, Serializable {
 
-	/**
-	 * 
-	 */
+	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1383028760456996035L;
+	
+	/** The rsa public key. */
 	private RSAPublicKey rsaPublicKey;
+	
+	/** The rsa private key. */
 	private RSAPrivateKey rsaPrivateKey;
 
+	/**
+	 * Instantiates a new RMI xor client socket factory.
+	 *
+	 * @param rsaPublicKey the rsa public key
+	 * @param rsaPrivateKey the rsa private key
+	 */
 	public RMIXorClientSocketFactory(RSAPublicKey rsaPublicKey, RSAPrivateKey rsaPrivateKey) {
 		this.rsaPublicKey = rsaPublicKey;
 		this.rsaPrivateKey = rsaPrivateKey;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.rmi.server.RMIClientSocketFactory#createSocket(java.lang.String, int)
+	 */
 	public Socket createSocket(String host, int port) throws IOException {
 		return new RMIXorSocket(host, port, rsaPublicKey, rsaPrivateKey);
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	public int hashCode() {
 		return (int) rsaPublicKey.getModulus().intValue();
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	public boolean equals(Object obj) {
 		return (getClass() == obj.getClass() && rsaPublicKey == ((RMIXorClientSocketFactory) obj).rsaPublicKey);
 	}

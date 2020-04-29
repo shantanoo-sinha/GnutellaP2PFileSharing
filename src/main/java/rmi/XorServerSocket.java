@@ -38,17 +38,29 @@
 
 package rmi;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
+/**
+ * The Class XorServerSocket.
+ */
 class XorServerSocket extends ServerSocket {
 
+	/** The pattern. */
 	/*
 	 * The pattern used to "encrypt" and "decrypt" each byte sent or received by the
 	 * socket.
 	 */
 	private final byte pattern;
 
+	/**
+	 * Instantiates a new xor server socket.
+	 *
+	 * @param port the port
+	 * @param pattern the pattern
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	/*
 	 * Constructor for class XorServerSocket.
 	 */
@@ -57,6 +69,9 @@ class XorServerSocket extends ServerSocket {
 		this.pattern = pattern;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.net.ServerSocket#accept()
+	 */
 	/*
 	 * Creates a socket of type XorSocket and then calls implAccept to wait for a
 	 * client connection.
