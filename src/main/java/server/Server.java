@@ -1,18 +1,15 @@
 package server;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.RemoteException;
@@ -21,7 +18,6 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,7 +35,6 @@ import model.CustomObject;
 import model.FileConsistencyState;
 import model.MessageID;
 import model.P2PFile;
-import security.RSA4;
 import security.RSAEncryption;
 import security.RSAKeyPair;
 import security.RSAKeysHelper;
@@ -63,7 +58,7 @@ public class Server implements IRemote, Serializable {
 	/** The Constant logger. */
 	private static final Logger logger = LogManager.getLogger(Server.class);
 
-	byte pattern = (byte) 0xAC;
+//	byte pattern = (byte) 0xAC;
 	
 	/** The id. */
 	private String id;
@@ -131,24 +126,8 @@ public class Server implements IRemote, Serializable {
 	private RSAPublicKey rsaPublicKey = null;
     private RSAPrivateKey rsaPrivateKey = null;
     
-    private RSA4 rsa;
+    private RSAEncryption rsa;
     
-    public RSAPublicKey getRsaPublicKey() {
-		return rsaPublicKey;
-	}
-
-	public void setRsaPublicKey(RSAPublicKey rsaPublicKey) {
-		this.rsaPublicKey = rsaPublicKey;
-	}
-
-	public RSAPrivateKey getRsaPrivateKey() {
-		return rsaPrivateKey;
-	}
-
-	public void setRsaPrivateKey(RSAPrivateKey rsaPrivateKey) {
-		this.rsaPrivateKey = rsaPrivateKey;
-	}
-	
 	/**
 	 * Instantiates a new server.
 	 */
@@ -164,7 +143,7 @@ public class Server implements IRemote, Serializable {
 	 * @param peerNetworkTopology the peer network topology
 	 * @param TTR the ttr
 	 */
-	public Server(Client client, String id, String peerNetworkTopology, long TTR, RSAKeyPair rsaKeyPair, RSA4 rsa) {
+	public Server(Client client, String id, String peerNetworkTopology, long TTR, RSAKeyPair rsaKeyPair, RSAEncryption rsa) {
 		this();
 		this.id = id;
 		this.client = client;
@@ -276,6 +255,22 @@ public class Server implements IRemote, Serializable {
 		return upstreamMap.containsKey(messageId);
 	}
 	
+	public boolean checkUpstreamMap(byte[] bytes) {
+		MessageID messageID = null;
+		try {
+			byte[] decryptedData = rsa.decryptData(bytes);
+			ByteArrayInputStream byteInputStream = new ByteArrayInputStream(decryptedData);
+	        ObjectInputStream objInputStream = new ObjectInputStream(byteInputStream);
+	        messageID = (MessageID)objInputStream.readObject();
+	        
+			logger.info("Message ID:" + messageID.toString());
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return upstreamMap.containsKey(messageID);
+	}
+	
 	/**
 	 * Gets the ttl.
 	 *
@@ -329,7 +324,7 @@ public class Server implements IRemote, Serializable {
 	 *
 	 * @return the leafNodeFiles
 	 */
-	public Map<String, Map</*File*/String, P2PFile>> getLeafNodeMasterFiles() {
+	public Map<String, Map<String, P2PFile>> getLeafNodeMasterFiles() {
 		return leafNodeMasterFiles;
 	}
 	
@@ -338,7 +333,7 @@ public class Server implements IRemote, Serializable {
 	 *
 	 * @return the leaf node shared files
 	 */
-	public Map<String, Map</*File*/String, P2PFile>> getLeafNodeSharedFiles() {
+	public Map<String, Map<String, P2PFile>> getLeafNodeSharedFiles() {
 		return leafNodeSharedFiles;
 	}
 	
@@ -385,6 +380,22 @@ public class Server implements IRemote, Serializable {
 		this.sharedKeysDirectory = sharedKeysDirectory;
 	}
 	
+	public RSAPublicKey getRsaPublicKey() {
+		return rsaPublicKey;
+	}
+
+	public void setRsaPublicKey(RSAPublicKey rsaPublicKey) {
+		this.rsaPublicKey = rsaPublicKey;
+	}
+
+	public RSAPrivateKey getRsaPrivateKey() {
+		return rsaPrivateKey;
+	}
+
+	public void setRsaPrivateKey(RSAPrivateKey rsaPrivateKey) {
+		this.rsaPrivateKey = rsaPrivateKey;
+	}
+	
 	/**
 	 * Inits the Server.
 	 */
@@ -396,28 +407,18 @@ public class Server implements IRemote, Serializable {
 			loadConfig();
 			
 			System.setProperty(Constants.JAVA_RMI_SERVER_HOSTNAME, Constants.LOCALHOST);
-//			java.lang.System.setProperty("sun.rmi.registry.registryFilter", "java.**;security.**;rmi.**");
 			logger.info("[" + this.id + "] " + Constants.JAVA_RMI_SERVER_HOSTNAME + ":" + System.getProperty(Constants.JAVA_RMI_SERVER_HOSTNAME));
 			
 			// Initialize the RMI Registry
 			IRemote stub = (IRemote) UnicastRemoteObject.exportObject(this, 0);
-			/*RMIClientSocketFactory csf = new RMISecurityClientSocketFactory(rsaPublicKey, rsaPrivateKey);
-		    RMIServerSocketFactory ssf = new RMISecurityServerSocketFactory(rsaPublicKey, rsaPrivateKey);*/
-			
-			/*RMIClientSocketFactory csf = new RMIXorClientSocketFactory(rsaPublicKey, rsaPrivateKey);
-		    RMIServerSocketFactory ssf = new RMIXorServerSocketFactory(rsaPublicKey, rsaPrivateKey);*/
 		    
 			/*RMIClientSocketFactory csf = new XorClientSocketFactory(pattern);
-		    RMIServerSocketFactory ssf = new XorServerSocketFactory(pattern);*/
+		    RMIServerSocketFactory ssf = new XorServerSocketFactory(pattern);
+		    IRemote stub = (IRemote) UnicastRemoteObject.exportObject(this, 0, csf, ssf);*/
 			
-			
-		    //LocateRegistry.createRegistry(1099, csf, ssf);
-//		    IRemote stub = (IRemote) UnicastRemoteObject.exportObject(this, 0, csf, ssf);
-			/*IRemote stub = (IRemote) UnicastRemoteObject.exportObject(this, 0);*/
-		    Registry registry = LocateRegistry.getRegistry(1099);
+			Registry registry = LocateRegistry.getRegistry(1099);
 			String rmiAddress = Constants.RMI_LOCALHOST + prop.getProperty(id + Constants.PORT).trim() + Constants.PEER_SERVER;
 			registry.rebind(rmiAddress, stub);
-			
 			
 			/*logger.info("[" + this.id + "] Available peers:");
 			for (String boundName : registry.list()) {
@@ -509,55 +510,6 @@ public class Server implements IRemote, Serializable {
 	}
 
 	/**
-	 * Register masterFiles.
-	 *
-	 * @param messageID the message ID
-	 * @param fileName the file name
-	 * @throws RemoteException the remote exception
-	 *//*
-	public void registerFiles() {
-		if (isSuperPeer)
-			return;
-		
-		//loading masterFiles information
-		File[] filesArr = filesDirectory.listFiles();
-		logger.info("*******************************************************************");
-		logger.info("[" + this.id + "] " + this.id + " Files Directory:" + filesDirectory);
-		logger.info("[" + this.id + "] " + this.id + " Available Files:");
-		for (int i = 0; i < filesArr.length; i++) {
-			logger.info("[" + this.id + "] " + filesArr[i].getName());
-			masterFiles.put(filesArr[i], filesArr[i]);
-		}
-		new Thread(new DirectoryWatcher(this)).start();
-		logger.info("[" + this.id + "] " + this.id + " Files Count:" + masterFiles.size());
-		logger.info("*******************************************************************");
-	}*/
-
-	/**
-	 * Delete file.
-	 *
-	 * @param fileName the file name
-	 * @throws RemoteException the remote exception
-	 *//*
-	public void deleteFile(String fileName) throws RemoteException {
-		logger.info("[" + this.id + "] " + "Deleting Server file...");
-		removeFileFromRegistry(fileName);
-		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
-	}
-	
-	*//**
-	 * Adds the file.
-	 *
-	 * @param fileName the file name
-	 * @throws RemoteException the remote exception
-	 *//*
-	public void addFile(String fileName) throws RemoteException {
-		logger.info("[" + this.id + "] " + "Updating Server file...");
-		addFileToRegistry(fileName);
-		logger.info("[" + this.id + "] " + "Updated Server masterFiles count:" + masterFiles.size());
-	}*/
-
-	/**
 	 * Query.
 	 *
 	 * @param messageID the message ID
@@ -585,7 +537,6 @@ public class Server implements IRemote, Serializable {
 				//querying super peer
 				logger.info("[" + this.id + "] " + "Requested file " + fileName + " is not present on the requesting client. Looking on others.");
 				if (!upstreamMap.containsKey(messageID) && TTL >= 0) {
-//					upstreamMap.put(messageID, nodeAddress);
 					upstreamMap.put(messageID, this.id);
 				}
 //				query(messageID, this.TTL-1, fileName, nodeAddress);
@@ -593,7 +544,6 @@ public class Server implements IRemote, Serializable {
 				parameters.add(messageID);
 				parameters.add(this.TTL-1);
 				parameters.add(fileName);
-//				parameters.add(nodeAddress);
 				parameters.add(this.id);
 				CustomObject obj1 = new CustomObject("query", parameters, null);
 				ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
@@ -659,29 +609,32 @@ public class Server implements IRemote, Serializable {
 						Registry registry;
 						try {
 							registry = LocateRegistry.getRegistry(1099);
-//							registry = LocateRegistry.getRegistry(Constants.LOCALHOST, 1099, new XorClientSocketFactory(pattern));
 							IRemote serverStub = (IRemote) registry.lookup(Constants.RMI_LOCALHOST + prop.getProperty(leafNodeAddress + Constants.PORT).trim() + Constants.PEER_SERVER);
 							
-							if(!serverStub.checkUpstreamMap(messageID)) {
+							RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(leafNodeAddress, this.sharedKeysDirectory);
+							RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+							
+							ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+					        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
+					        objOutputStream.writeObject(messageID);
+							
+//							if(!serverStub.checkUpstreamMap(messageID)) {
+							if(!serverStub.checkUpstreamMap(rsa1.encryptData(byteOutputStream.toByteArray()))) {
 								logger.info("[" + this.id + "] " + "Looking file: " + fileName + " on connected leaf node:" + leafNodeAddress);	
 //								serverStub.query(messageID, TTL-1, fileName, upstreamIP);
 								List<Object> parameters = new ArrayList<>();
 								parameters.add(messageID);
 								parameters.add(TTL-1);
 								parameters.add(fileName);
-								parameters.add(upstreamIP);
-//								//TODO
 								parameters.add(this.id);
 								
 								CustomObject obj1 = new CustomObject("query", parameters, null);
 								
-								ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-						        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
-						        objOutputStream.writeObject(obj1);
+								ByteArrayOutputStream byteOutputStream1 = new ByteArrayOutputStream();
+						        ObjectOutputStream objOutputStream1 = new ObjectOutputStream(byteOutputStream1);
+						        objOutputStream1.writeObject(obj1);
 						        
-						        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(leafNodeAddress, this.sharedKeysDirectory);
-								RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
-						        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
+						        byte[] encryptedData = rsa1.encryptData(byteOutputStream1.toByteArray());
 						        serverStub.query(encryptedData);
 							} else {
 								logger.info("[" + this.id + "] " + leafNodeAddress + " already saw this message. Hence, skipping.");
@@ -706,26 +659,31 @@ public class Server implements IRemote, Serializable {
 						Registry registry;
 						try {
 							registry = LocateRegistry.getRegistry(1099);
-//							registry = LocateRegistry.getRegistry(Constants.LOCALHOST, 1099, new XorClientSocketFactory(pattern));
 							IRemote serverStub = (IRemote) registry.lookup(neighbourSuperPeerAddress);
-							if(!serverStub.checkUpstreamMap(messageID)) {
+							
+							RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(neighbourSuperPeer, this.sharedKeysDirectory);
+							RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+							
+							ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+					        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
+					        objOutputStream.writeObject(messageID);
+					        
+//							if(!serverStub.checkUpstreamMap(messageID)) {
+							if(!serverStub.checkUpstreamMap(rsa1.encryptData(byteOutputStream.toByteArray()))) {
 								logger.info("[" + this.id + "] " + "Looking file: " + fileName + " on neighbour Super Peer:" + neighbourSuperPeerAddress);	
 //								serverStub.query(messageID, TTL-1, fileName, nodeAddress);
 								List<Object> parameters = new ArrayList<>();
 								parameters.add(messageID);
 								parameters.add(TTL-1);
 								parameters.add(fileName);
-//								parameters.add(nodeAddress);
 								parameters.add(this.id);
 								CustomObject obj1 = new CustomObject("query", parameters, null);
 								
-								ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-						        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
-						        objOutputStream.writeObject(obj1);
+								ByteArrayOutputStream byteOutputStream1 = new ByteArrayOutputStream();
+						        ObjectOutputStream objOutputStream1 = new ObjectOutputStream(byteOutputStream1);
+						        objOutputStream1.writeObject(obj1);
 						        
-						        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(neighbourSuperPeer, this.sharedKeysDirectory);
-								RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
-						        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
+						        byte[] encryptedData = rsa1.encryptData(byteOutputStream1.toByteArray());
 						        serverStub.query(encryptedData);
 							} else {
 								logger.info("[" + this.id + "] " + neighbourSuperPeerAddress + " already saw this message. Hence, skipping.");
@@ -772,24 +730,29 @@ public class Server implements IRemote, Serializable {
 						IRemote serverStub = (IRemote) registry.lookup(superPeer);
 						logger.info("[" + this.id + "] " + "Looking file: " + fileName + " on Super Peer:" + superPeer);	
 						
-						if(!serverStub.checkUpstreamMap(messageID)) {
+						RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(superPeerID, this.sharedKeysDirectory);
+						RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+
+						ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+				        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
+				        objOutputStream.writeObject(messageID);
+				        
+//						if(!serverStub.checkUpstreamMap(messageID)) {
+						if(!serverStub.checkUpstreamMap(rsa1.encryptData(byteOutputStream.toByteArray()))) {
 							logger.info("[" + this.id + "] " + "Looking file: " + fileName + " on connected Super Peer:" + superPeer);	
 //							serverStub.query(messageID, TTL-1, fileName, nodeAddress);
 							List<Object> parameters = new ArrayList<>();
 							parameters.add(messageID);
 							parameters.add(TTL-1);
 							parameters.add(fileName);
-//							parameters.add(nodeAddress);
 							parameters.add(this.id);
 							CustomObject obj1 = new CustomObject("query", parameters, null);
 							
-							ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-					        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
-					        objOutputStream.writeObject(obj1);
+							ByteArrayOutputStream byteOutputStream1 = new ByteArrayOutputStream();
+					        ObjectOutputStream objOutputStream1 = new ObjectOutputStream(byteOutputStream1);
+					        objOutputStream1.writeObject(obj1);
 					        
-					        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(superPeerID, this.sharedKeysDirectory);
-							RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
-					        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
+					        byte[] encryptedData = rsa1.encryptData(byteOutputStream1.toByteArray());
 					        serverStub.query(encryptedData);
 						} else {
 							logger.info("[" + this.id + "] " + superPeer + " already saw this message. Hence, skipping.");
@@ -873,10 +836,10 @@ public class Server implements IRemote, Serializable {
 				}
 			} else {
 				// back propagating queryHit message to the requestor leaf node
-				String upstreamIPAddress = upstreamMap.get(messageID);
-				logger.info("[" + this.id + "] " + "Sending back-propogation message for requested file " + fileName + " to " + upstreamIPAddress);
+				String upstreamClient = upstreamMap.get(messageID);
+				logger.info("[" + this.id + "] " + "Sending back-propogation message for requested file " + fileName + " to " + upstreamClient);
 				Registry registry = LocateRegistry.getRegistry(1099);
-				IRemote serverStub = (IRemote) registry.lookup(Constants.RMI_LOCALHOST + prop.getProperty(upstreamIPAddress + Constants.PORT).trim() + Constants.PEER_SERVER);
+				IRemote serverStub = (IRemote) registry.lookup(Constants.RMI_LOCALHOST + prop.getProperty(upstreamClient + Constants.PORT).trim() + Constants.PEER_SERVER);
 //				serverStub.queryHit(messageID, TTL, fileName, leafNodeIP);
 				List<Object> parameters = new ArrayList<>();
 				parameters.add(messageID);
@@ -890,8 +853,8 @@ public class Server implements IRemote, Serializable {
 		        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
 		        objOutputStream.writeObject(obj1);
 		        
-		        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(upstreamIPAddress, this.sharedKeysDirectory);
-				RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+		        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(upstreamClient, this.sharedKeysDirectory);
+				RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
 		        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
 		        serverStub.queryHit(encryptedData);
 			}
@@ -951,29 +914,6 @@ public class Server implements IRemote, Serializable {
 	}
 
 	/**
-	 * Adds the file to registry.
-	 *
-	 * @param p2pFile the p 2 p file
-	 * @param fileName the file name
-	 * @return true, if successful
-	 *//*
-	private synchronized boolean addFileToRegistry(String fileName) {
-		masterFiles.put(new File(filesDirectory + File.separator + fileName), new File(filesDirectory + File.separator + fileName));
-		return true;
-	}
-	
-	*//**
-	 * Removes the file from registry.
-	 *
-	 * @param fileName the file name
-	 * @return true, if successful
-	 *//*
-	private synchronized boolean removeFileFromRegistry(String fileName) {
-		masterFiles.remove(new File(filesDirectory + File.separator + fileName), new File(filesDirectory + File.separator + fileName));
-		return true;
-	}*/
-
-	/**
 	 * Write file content.
 	 *
 	 * @param fileContent the file content
@@ -991,7 +931,6 @@ public class Server implements IRemote, Serializable {
 			fileOutputStream.write(p2pFile.getFileContent());
 			logger.info(p2pFile.getVersion() + ", " + p2pFile.getTTR() + ", " + p2pFile.getOriginServerID() + ", " + getFileObj(client.getSharedFilesDirectory(), p2pFile.getFileName()) + ", " + p2pFile.getFileName() + ", " + p2pFile.getState());
 			P2PFile localP2PFile = new P2PFile(p2pFile.getVersion(), p2pFile.getTTR(), p2pFile.getOriginServerID(), p2pFile.getOriginServerAddress(), p2pFile.getOriginServerSuperPeerID(), nodeAddress, null, getFileObj(client.getSharedFilesDirectory(), p2pFile.getFileName()), p2pFile.getFileName(), p2pFile.getState());
-			/*isFileAddedToRegistry = addFileToRegistry(fileName);*/
 			isFileAddedToRegistry = client.addSharedFileToRegistry(fileName, localP2PFile);
 			registerSharedFilesToSuperPeer();
 			if(isFileAddedToRegistry)
@@ -1136,7 +1075,15 @@ public class Server implements IRemote, Serializable {
 							registry = LocateRegistry.getRegistry(1099);
 							IRemote serverStub = (IRemote) registry.lookup(Constants.RMI_LOCALHOST + prop.getProperty(leafNodeAddress + Constants.PORT).trim() + Constants.PEER_SERVER);
 							
-							if(!serverStub.checkUpstreamMap(messageID)) {
+							RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(leafNodeAddress, this.sharedKeysDirectory);
+							RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+							
+							ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+					        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
+					        objOutputStream.writeObject(messageID);
+					        
+//							if(!serverStub.checkUpstreamMap(messageID)) {
+							if(!serverStub.checkUpstreamMap(rsa1.encryptData(byteOutputStream.toByteArray()))) {
 								logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName()  + " on connected leaf node:" + leafNodeAddress);	
 //								serverStub.invalidate(messageID, p2pFile, upstreamIP);
 								List<Object> parameters = new ArrayList<>();
@@ -1145,13 +1092,11 @@ public class Server implements IRemote, Serializable {
 								parameters.add(upstreamIP);
 								CustomObject obj = new CustomObject("invalidate", parameters, null);
 								
-								ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-						        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
-						        objOutputStream.writeObject(obj);
+								ByteArrayOutputStream byteOutputStream1 = new ByteArrayOutputStream();
+						        ObjectOutputStream objOutputStream1 = new ObjectOutputStream(byteOutputStream1);
+						        objOutputStream1.writeObject(obj);
 						        
-						        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(leafNodeAddress, this.sharedKeysDirectory);
-								RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
-						        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
+						        byte[] encryptedData = rsa1.encryptData(byteOutputStream1.toByteArray());
 						        serverStub.invalidate(encryptedData);
 							} else {
 								logger.info("[" + this.id + "] " + leafNodeAddress + " already saw the message file invalidate message for file: " + p2pFile.getFileName()  + " . Hence, skipping.");
@@ -1179,7 +1124,16 @@ public class Server implements IRemote, Serializable {
 						try {
 							registry = LocateRegistry.getRegistry(1099);
 							IRemote serverStub = (IRemote) registry.lookup(neighbourSuperPeerAddress);
-							if(!serverStub.checkUpstreamMap(messageID)) {
+							
+							RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(neighbourSuperPeer, this.sharedKeysDirectory);
+							RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+							
+							ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+					        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
+					        objOutputStream.writeObject(messageID);
+					        
+//							if(!serverStub.checkUpstreamMap(messageID)) {
+							if(!serverStub.checkUpstreamMap(rsa1.encryptData(byteOutputStream.toByteArray()))) {
 								logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName() + " on neighbour Super Peer:" + neighbourSuperPeerAddress);	
 //								serverStub.invalidate(messageID, p2pFile, nodeAddress);
 								List<Object> parameters = new ArrayList<>();
@@ -1188,13 +1142,11 @@ public class Server implements IRemote, Serializable {
 								parameters.add(this.id);
 								CustomObject obj = new CustomObject("invalidate", parameters, null);
 								
-								ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-						        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
-						        objOutputStream.writeObject(obj);
+								ByteArrayOutputStream byteOutputStream1 = new ByteArrayOutputStream();
+						        ObjectOutputStream objOutputStream1 = new ObjectOutputStream(byteOutputStream1);
+						        objOutputStream1.writeObject(obj);
 						        
-						        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(neighbourSuperPeer, this.sharedKeysDirectory);
-								RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
-						        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
+						        byte[] encryptedData = rsa1.encryptData(byteOutputStream1.toByteArray());
 						        serverStub.invalidate(encryptedData);
 							} else {
 								logger.info("[" + this.id + "] " + neighbourSuperPeerAddress + " already saw the file invalidate message. Hence, skipping.");
@@ -1237,7 +1189,7 @@ public class Server implements IRemote, Serializable {
 				        objOutputStream.writeObject(obj);
 				        
 				        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(superPeerID, this.sharedKeysDirectory);
-						RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+						RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
 				        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
 				        serverStub.updateSharedFilesToSuperPeer(encryptedData);
 					} catch (Exception e) {
@@ -1257,7 +1209,15 @@ public class Server implements IRemote, Serializable {
 						IRemote serverStub = (IRemote) registry.lookup(superPeer);
 						logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName() + " on Super Peer:" + superPeer);	
 						
-						if(!serverStub.checkUpstreamMap(messageID)) {
+						RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(superPeerID, this.sharedKeysDirectory);
+						RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+						
+						ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+				        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
+				        objOutputStream.writeObject(messageID);
+				        
+//						if(!serverStub.checkUpstreamMap(messageID)) {
+						if(!serverStub.checkUpstreamMap(rsa1.encryptData(byteOutputStream.toByteArray()))) {
 							logger.info("[" + this.id + "] " + "Sending file invalidate message for file: " + p2pFile.getFileName() + " on connected Super Peer:" + superPeer);	
 //							serverStub.invalidate(messageID, p2pFile, nodeAddress);
 							List<Object> parameters = new ArrayList<>();
@@ -1266,13 +1226,11 @@ public class Server implements IRemote, Serializable {
 							parameters.add(this.id);
 							CustomObject obj = new CustomObject("invalidate", parameters, null);
 							
-							ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-					        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
-					        objOutputStream.writeObject(obj);
+							ByteArrayOutputStream byteOutputStream1 = new ByteArrayOutputStream();
+					        ObjectOutputStream objOutputStream1 = new ObjectOutputStream(byteOutputStream1);
+					        objOutputStream1.writeObject(obj);
 					        
-					        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(superPeerID, this.sharedKeysDirectory);
-							RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
-					        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
+					        byte[] encryptedData = rsa1.encryptData(byteOutputStream1.toByteArray());
 					        serverStub.invalidate(encryptedData);
 						} else {
 							logger.info("[" + this.id + "] " + superPeer + " already saw the file invalidate message. Hence, skipping.");
@@ -1480,7 +1438,7 @@ public class Server implements IRemote, Serializable {
 	        objOutputStream.writeObject(obj);
 	        
 	        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(superPeerID, this.sharedKeysDirectory);
-			RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+			RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
 	        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
 	        serverStub.registerMasterFilesToSuperPeer(encryptedData);
 		} catch (Exception e) {
@@ -1508,7 +1466,7 @@ public class Server implements IRemote, Serializable {
 	        objOutputStream.writeObject(obj);
 	        
 	        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(superPeerID, this.sharedKeysDirectory);
-			RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+			RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
 	        byte[] encryptedData = rsa1.encryptData(byteOutputStream.toByteArray());
 	        serverStub.registerSharedFilesToSuperPeer(encryptedData);
 		} catch (Exception e) {
@@ -1548,55 +1506,6 @@ public class Server implements IRemote, Serializable {
 			logger.error("[" + this.id + "] " + "Server exception: Unable to refresh shared file from master leaf node.");
 			e.printStackTrace();
 		}
-	}
-	
-	private RSAEncryption readKeys(String id) {
-		RSAEncryption rsa = null;
-		String privateKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PRIVATE_KEY_SUFFIX;
-		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PUBLIC_KEY_SUFFIX;
-		try {
-			FileReader privateFileReader = new FileReader(Paths.get(privateKeyFile).toFile());
-            BufferedReader bufferedReader = new BufferedReader(privateFileReader);
-
-            String line = null, N = null, D = null;
-            if((line = bufferedReader.readLine()) != null) {
-            	N = line;
-            	logger.debug("N=> " + line);
-            }
-            if((line = bufferedReader.readLine()) != null) {
-            	D = line;
-            	logger.debug("D=> " + line);
-            }
-            bufferedReader.close();
-	        
-            FileReader publicFileReader = new FileReader(Paths.get(publicKeyFile).toFile());
-            bufferedReader = new BufferedReader(publicFileReader);
-            line = null;
-            String E = null;
-            if((line = bufferedReader.readLine()) != null) {
-            	logger.debug("N=> " + line);
-            }
-            if((line = bufferedReader.readLine()) != null) {
-            	E = line;
-            	logger.debug("E=> " + line);
-            }
-            bufferedReader.close();
-	        
-            String nString = new String(Base64.getDecoder().decode(N)).toString();
-			String dString = new String(Base64.getDecoder().decode(D)).toString();
-			String eString = new String(Base64.getDecoder().decode(E)).toString();
-			
-			BigInteger n, d, e;
-			n = new BigInteger(nString);
-			d = new BigInteger(dString);
-			e = new BigInteger(eString);
-			rsa = new RSAEncryption(n, e, d);
-			
-		} catch (IOException e1) {
-			logger.error("[" + this.id + "] " + "Client exception: Unable to read RSA keys.");
-			e1.printStackTrace();
-		}
-		return rsa;
 	}
 	
 	public void sharePublicKeyToAll() {
@@ -1704,7 +1613,7 @@ public class Server implements IRemote, Serializable {
 			
 			byte[] myRSAPublicKey = RSAKeysHelper.readPublicKeyFile(this.id, this.keysDirectory.getPath());
 			RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(clientName, this.sharedKeysDirectory);
-			RSA4 rsa1 = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+			RSAEncryption rsa1 = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
 	        encryptedRSAPublicKey = rsa1.encryptData(myRSAPublicKey);
 		} catch (Exception e) {
 			logger.error("[" + this.id + "] " + "Server exception: Unable to write public key for another client.");
@@ -1748,11 +1657,11 @@ public class Server implements IRemote, Serializable {
 					IRemote serverStub = (IRemote) registry.lookup(name);
 					byte[] receivedPublicKey = serverStub.sharePublicKeyAndGetPublicKey(publicKey, this.id);
 					String substring = name.substring(16, 20);
-					logger.info("substring:" + substring);
+//					logger.info("substring:" + substring);
 					String propertyFromValue = getPropertyFromValue(substring);
-					logger.info("propertyFromValue:" + propertyFromValue);
+//					logger.info("propertyFromValue:" + propertyFromValue);
 					String neighbourSuperPeer = propertyFromValue.split(".port")[0];
-					logger.info("Public Key shared with " + neighbourSuperPeer);
+//					logger.info("Public Key shared with " + neighbourSuperPeer);
 
 					byte[] decryptedReceivedPublicKey = rsa.decryptData(receivedPublicKey);
 					File publicKeyFilePath = this.getSharedKeysDirectory();

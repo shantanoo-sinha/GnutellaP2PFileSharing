@@ -42,7 +42,7 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import security.RSA4;
+import security.RSAEncryption;
 import security.RSAPrivateKey;
 import security.RSAPublicKey;
 
@@ -54,7 +54,7 @@ class RMIXorOutputStream extends FilterOutputStream {
 	private RSAPublicKey rsaPublicKey;
 //	private RSAPrivateKey rsaPrivateKey;
 	private byte[] ibuffer = new byte[1];
-	private RSA4 rsa;
+	private RSAEncryption rsa;
 
 	/*
 	 * Constructs an output stream that uses the specified pattern to "encrypt" each
@@ -67,7 +67,7 @@ class RMIXorOutputStream extends FilterOutputStream {
 	public RMIXorOutputStream(OutputStream out, RSAPublicKey publicKey/*, RSAPrivateKey privateKey*/) {
 		super(out);
 		this.rsaPublicKey = publicKey;
-		rsa = new RSA4(this.rsaPublicKey.getModulus(), this.rsaPublicKey.getPublicExponent(), null);
+		rsa = new RSAEncryption(this.rsaPublicKey.getModulus(), this.rsaPublicKey.getPublicExponent(), null);
 	}
 
 	/*

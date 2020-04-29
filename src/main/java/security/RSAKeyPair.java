@@ -11,7 +11,6 @@ import java.io.Serializable;
  */
 public class RSAKeyPair implements Serializable {
 	
-	
 	/**
 	 * 
 	 */

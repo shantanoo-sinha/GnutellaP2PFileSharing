@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import model.CustomObject;
 import model.P2PFile;
-import security.RSA4;
+import security.RSAEncryption;
 import security.RSAKeysHelper;
 import security.RSAPublicKey;
 import server.IRemote;
@@ -73,11 +73,13 @@ public class FileDownloader extends Thread {
 	        objOutputStream.writeObject(obj);
 	        
 	        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(remoteID, server.getSharedKeysDirectory());
-			RSA4 rsa = new RSA4(pubKey.getModulus(), pubKey.getPublicExponent(), null);
-	        byte[] encryptedData = rsa.encryptData(byteOutputStream.toByteArray());
+			RSAEncryption rsa = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
+	        
+			byte[] encryptedData = rsa.encryptData(byteOutputStream.toByteArray());
 	        byte[] p2PFileBytes = remote.obtain(encryptedData);
 	        byte[] decryptedData = rsa.decryptDataWithPublicKey(p2PFileBytes);
-			ByteArrayInputStream byteInputStream = new ByteArrayInputStream(decryptedData);
+			
+	        ByteArrayInputStream byteInputStream = new ByteArrayInputStream(decryptedData);
 	        ObjectInputStream objInputStream = new ObjectInputStream(byteInputStream);
 	        P2PFile p2PFile = (P2PFile)objInputStream.readObject();
 	        

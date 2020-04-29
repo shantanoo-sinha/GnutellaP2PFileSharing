@@ -42,7 +42,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import security.RSA4;
+import security.RSAEncryption;
 import security.RSAPrivateKey;
 import security.RSAPublicKey;
 
@@ -53,7 +53,7 @@ class RMIXorInputStream extends FilterInputStream {
 	 */
 //	private RSAPublicKey rsaPublicKey;
 	private RSAPrivateKey rsaPrivateKey;
-	private RSA4 rsa;
+	private RSAEncryption rsa;
 
 	/*
 	 * Constructs an input stream that uses the specified pattern to "decrypt" each
@@ -62,7 +62,7 @@ class RMIXorInputStream extends FilterInputStream {
 	public RMIXorInputStream(InputStream in, /*RSAPublicKey publicKey, */RSAPrivateKey privateKey) {
 		super(in);
 		this.rsaPrivateKey = privateKey;
-		rsa = new RSA4(this.rsaPrivateKey.getModulus(), null, this.rsaPrivateKey.getPrivateExponent());
+		rsa = new RSAEncryption(this.rsaPrivateKey.getModulus(), null, this.rsaPrivateKey.getPrivateExponent());
 	}
 
 	/*

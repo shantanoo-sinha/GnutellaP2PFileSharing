@@ -9,7 +9,6 @@ import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Map;
 
-import model.MessageID;
 import model.P2PFile;
 
 /**
@@ -107,7 +106,8 @@ public interface IRemote extends Remote {
 	 * @return true, if successful
 	 * @throws RemoteException the remote exception
 	 */
-	public boolean checkUpstreamMap(MessageID messageID) throws RemoteException;
+//	public boolean checkUpstreamMap(MessageID messageID) throws RemoteException;
+	public boolean checkUpstreamMap(byte[] bytes) throws RemoteException;
 	
 	/**
 	 * Invalidate.
