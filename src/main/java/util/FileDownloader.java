@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -77,10 +78,17 @@ public class FileDownloader extends Thread {
 	        RSAPublicKey pubKey = RSAKeysHelper.readPublicKey(remoteID, server.getSharedKeysDirectory());
 			RSAEncryption rsa = new RSAEncryption(pubKey.getModulus(), pubKey.getPublicExponent(), null);
 	        
-			byte[] encryptedData = rsa.encryptData(byteOutputStream.toByteArray());
+			byte[] plainTextBytes = byteOutputStream.toByteArray();
+	        logger.debug("[" + server.getId() + "] Plaintext bytes: " + Arrays.toString(plainTextBytes));
+			byte[] encryptedData = rsa.encryptData(plainTextBytes);
+	        logger.debug("[" + server.getId() + "] Encrypted bytes: " + Arrays.toString(encryptedData));
+
 	        byte[] p2PFileBytes = remote.obtain(encryptedData);
+	        
+	        logger.debug("[" + server.getId() + "] Encrypted bytes: " + Arrays.toString(p2PFileBytes));
 	        byte[] decryptedData = rsa.decryptDataWithPublicKey(p2PFileBytes);
-			
+	        logger.debug("[" + server.getId() + "] Decrypted bytes: " + Arrays.toString(decryptedData));
+	        
 	        ByteArrayInputStream byteInputStream = new ByteArrayInputStream(decryptedData);
 	        ObjectInputStream objInputStream = new ObjectInputStream(byteInputStream);
 	        P2PFile p2PFile = (P2PFile)objInputStream.readObject();

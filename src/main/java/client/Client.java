@@ -352,7 +352,7 @@ public class Client implements Serializable {
 		
 		//loading masterFiles information
 		File[] filesArr = getMasterFilesDirectory().listFiles();
-		logger.info("*******************************************************************");
+//		logger.info("*******************************************************************");
 		logger.info("[" + this.id + "] " + this.id + " Files Directory:" + getMasterFilesDirectory());
 		logger.info("[" + this.id + "] " + this.id + " Available Files:");
 		for (int i = 0; i < filesArr.length; i++) {
@@ -474,7 +474,6 @@ public class Client implements Serializable {
 		String id = args[1];
 		
 		pushOrPull = args[2];
-		logger.debug("===================================================================");
 		logger.info("*******************************************************************");
 		logger.info("[" + id + "] " + "Initialized Topology:" + topology);
 		if("Pull".equalsIgnoreCase(pushOrPull)) {
@@ -641,7 +640,7 @@ public class Client implements Serializable {
 			
 			if("Push".equalsIgnoreCase(pushOrPull)) {
 				String leafNodeId = Constants.RMI_LOCALHOST + server.getProperty(id + ".port").trim() + Constants.PEER_SERVER;
-				MessageID messageID = new MessageID(leafNodeId, sequenceNumber++);
+				MessageID messageID = new MessageID(leafNodeId, ++sequenceNumber);
 				
 //				server.invalidate(messageID, p2pFile, this.server.getIpAddress());
 				List<Object> parameters = new ArrayList<>();
@@ -652,7 +651,12 @@ public class Client implements Serializable {
 				ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
 		        ObjectOutputStream objOutputStream = new ObjectOutputStream(byteOutputStream);
 		        objOutputStream.writeObject(obj);
-		        byte[] encryptedData = rsa.encryptData(byteOutputStream.toByteArray());
+		        
+		        byte[] plainTextBytes = byteOutputStream.toByteArray();
+		        logger.debug("[" + this.id + "] Plaintext bytes: " + Arrays.toString(plainTextBytes));
+		        byte[] encryptedData = rsa.encryptData(plainTextBytes);
+		        logger.debug("[" + this.id + "] Encrypted bytes: " + Arrays.toString(encryptedData));
+		        
 		        server.invalidate(encryptedData);
 			}
 		} catch (RemoteException e) {
@@ -705,7 +709,7 @@ public class Client implements Serializable {
 			rsa = new RSAEncryption(rsaKeyPair.getPublic().getModulus(), rsaKeyPair.getPublic().getPublicExponent(), rsaKeyPair.getPrivate().getPrivateExponent());
 			return;
 		}
-		logger.info("Generating RSA keys");
+		logger.info("[" + this.id + "] Generating RSA keys");
 		rsa = new RSAEncryption(1024);
 		rsaKeyPair = rsa.getRSAKeyPair();
 		writeKeys();
@@ -716,7 +720,7 @@ public class Client implements Serializable {
 	 */
 	private void writeKeys() {
 		
-		logger.info("Writing RSA keys");
+		logger.info("[" + this.id + "] Writing RSA keys");
 		
 		String privateKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PRIVATE_KEY_SUFFIX;
 		String publicKeyFile = getKeysDirectory() + File.separator + this.getId() + Constants.PUBLIC_KEY_SUFFIX;
@@ -746,7 +750,7 @@ public class Client implements Serializable {
             bufferedWriter.write(Base64.getEncoder().encodeToString(("" + rsaKeyPair.getPublic().getPublicExponent()).getBytes()));
             // Always close files.
             bufferedWriter.close();
-            logger.info("RSA keys generated");
+            logger.info("[" + this.id + "] RSA keys generated");
 		} catch (IOException e) {
 			logger.error("[" + this.id + "] " + "Client exception: Unable to write RSA keys.");
 			e.printStackTrace();
@@ -781,11 +785,11 @@ public class Client implements Serializable {
             String line = null, N = null, D = null;
             if((line = bufferedReader.readLine()) != null) {
             	N = line;
-            	logger.debug("N=> " + line);
+//            	logger.debug("N=> " + line);
             }
             if((line = bufferedReader.readLine()) != null) {
             	D = line;
-            	logger.debug("D=> " + line);
+//            	logger.debug("D=> " + line);
             }
             bufferedReader.close();
 	        
@@ -822,11 +826,11 @@ public class Client implements Serializable {
             String line = null, N = null, E = null;
             if((line = bufferedReader.readLine()) != null) {
             	N = line;
-            	logger.debug("N=> " + line);
+//            	logger.debug("N=> " + line);
             }
             if((line = bufferedReader.readLine()) != null) {
             	E = line;
-            	logger.debug("E=> " + line);
+//            	logger.debug("E=> " + line);
             }
             bufferedReader.close();
 	        
