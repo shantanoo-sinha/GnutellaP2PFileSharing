@@ -73,4 +73,16 @@ public class Constants {
 
 	/** The Constant LEAF. */
 	public static final String LEAF = ".leaf";
+	
+	/** The Constant KEYS_FOLDER. */
+	public static final String KEYS_FOLDER = "keys";
+	
+	/** The Constant SHARED_KEYS_FOLDER. */
+	public static final String SHARED_KEYS_FOLDER = "shared";
+	
+	/** The Constant PRIVATE_KEY_SUFFIX. */
+	public static final String PRIVATE_KEY_SUFFIX = ".key";
+	
+	/** The Constant PUBLIC_KEY_SUFFIX. */
+	public static final String PUBLIC_KEY_SUFFIX = ".pub";
 }

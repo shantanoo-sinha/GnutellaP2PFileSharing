@@ -25,6 +25,9 @@ public class P2PFile implements Serializable{
 	/** The origin server ID. */
 	private String originServerID;
 	
+	/** The origin server address. */
+	private String originServerAddress;
+	
 	/** The origin server super peer ID. */
 	private String originServerSuperPeerID;
 	
@@ -49,6 +52,7 @@ public class P2PFile implements Serializable{
 	 * @param version the version
 	 * @param tTR the t TR
 	 * @param originServerID the origin server ID
+	 * @param originServerAddress the origin server address
 	 * @param originServerSuperPeerID the origin server super peer ID
 	 * @param currentAddress the current address
 	 * @param fileContent the file content
@@ -56,12 +60,13 @@ public class P2PFile implements Serializable{
 	 * @param fileName the file name
 	 * @param state the state
 	 */
-	public P2PFile(int version, int tTR, String originServerID, String originServerSuperPeerID, String currentAddress, byte[] fileContent, File file, String fileName,
+	public P2PFile(int version, int tTR, String originServerID, String originServerAddress, String originServerSuperPeerID, String currentAddress, byte[] fileContent, File file, String fileName,
 			FileConsistencyState state) {
 		super();
 		this.version = version;
 		this.TTR = tTR;
 		this.originServerID = originServerID;
+		this.originServerAddress = originServerAddress;
 		this.originServerSuperPeerID = originServerSuperPeerID;
 		this.currentAddress = currentAddress;
 		this.fileContent = fileContent;
@@ -122,6 +127,23 @@ public class P2PFile implements Serializable{
 		this.originServerID = originServerID;
 	}
 	
+	/**
+	 * Gets the origin server Address.
+	 *
+	 * @return the origin server Address
+	 */
+	public String getOriginServerAddress() {
+		return originServerAddress;
+	}
+	
+	/**
+	 * Sets the origin server Address.
+	 *
+	 * @param originServerAddress the new origin server address
+	 */
+	public void setOriginServerAddress(String originServerAddress) {
+		this.originServerAddress = originServerAddress;
+	}
 	/**
 	 * Gets the origin server super peer ID.
 	 *

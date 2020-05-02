@@ -111,6 +111,16 @@
 									<filtering>false</filtering>
 								</resource>
 								<resource>
+									<targetPath>${project.name}/lib/classes/security</targetPath>
+									<directory>${basedir}/target/classes/security</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<targetPath>${project.name}/lib/classes/rmi</targetPath>
+									<directory>${basedir}/target/classes/rmi</directory>         <!-- source directory -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
 									<targetPath>${project.name}/lib/classes/</targetPath>
 									<directory>${basedir}/target/classes</directory>         <!-- source directory -->
 									<filtering>false</filtering>
